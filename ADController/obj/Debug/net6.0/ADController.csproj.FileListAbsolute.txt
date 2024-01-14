@@ -1,0 +1,15 @@
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\bin\Debug\net6.0\ADController.exe
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\bin\Debug\net6.0\ADController.deps.json
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\bin\Debug\net6.0\ADController.runtimeconfig.json
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\bin\Debug\net6.0\ADController.dll
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\bin\Debug\net6.0\ADController.pdb
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.GeneratedMSBuildEditorConfig.editorconfig
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.AssemblyInfoInputs.cache
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.AssemblyInfo.cs
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.csproj.CoreCompileInputs.cache
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.sourcelink.json
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.dll
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\refint\ADController.dll
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.pdb
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ADController.genruntimeconfig.cache
+D:\TheSolid_KANG\C#\Console\ADController\ADController\ADController\obj\Debug\net6.0\ref\ADController.dll
