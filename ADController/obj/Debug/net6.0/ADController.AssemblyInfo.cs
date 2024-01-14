@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ADController")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+955bce5684e4ba54b4513a2edfe7fbe711b9617a")]
 [assembly: System.Reflection.AssemblyProductAttribute("ADController")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ADController")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

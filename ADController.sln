@@ -4,11 +4,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ADController", "ADController\ADController.csproj", "{ABAFA58F-7B7A-4D03-AF54-40AA44881D76}"
-	ProjectSection(ProjectDependencies) = postProject
-		{55713A47-61CA-4F70-B604-9989E088251B} = {55713A47-61CA-4F70-B604-9989E088251B}
-	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Engine", "..\CSharp-Engine\Engine.csproj", "{55713A47-61CA-4F70-B604-9989E088251B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Engine", "CSharp-Engine\Engine.csproj", "{290D499D-037B-4570-A1BA-20B3C97D104A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,10 +17,10 @@ Global
 		{ABAFA58F-7B7A-4D03-AF54-40AA44881D76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABAFA58F-7B7A-4D03-AF54-40AA44881D76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABAFA58F-7B7A-4D03-AF54-40AA44881D76}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55713A47-61CA-4F70-B604-9989E088251B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55713A47-61CA-4F70-B604-9989E088251B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55713A47-61CA-4F70-B604-9989E088251B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55713A47-61CA-4F70-B604-9989E088251B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{290D499D-037B-4570-A1BA-20B3C97D104A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{290D499D-037B-4570-A1BA-20B3C97D104A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{290D499D-037B-4570-A1BA-20B3C97D104A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{290D499D-037B-4570-A1BA-20B3C97D104A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
