@@ -11,4 +11,9 @@
     <ProjectReference Include="..\CSharp-Engine\Engine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="02.CObj\" />
+    <Folder Include="97.DesignPattern\" />
+  </ItemGroup>
+
 </Project>
