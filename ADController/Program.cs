@@ -1,9 +1,14 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using ADController._97.DesignPattern;
 using Engine;
+using Engine._10.CActiveDirectoryMgr;
 
 Console.WriteLine("Hello, World!");
 
+var path = CActiveDirectoryMgr.GetInstance().GetCurrentDomainPath();
+Console.WriteLine($"도메인 경로 == {path}");
+
+/*
 var mgrInstance = CSceneMgr.GetInstance();
 int num = 0;
 do
@@ -25,4 +30,4 @@ void PrintTitle()
     titles.ForEach(x => { Console.WriteLine(x); });
 }
 
-
+*/
