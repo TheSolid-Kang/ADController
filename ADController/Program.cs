@@ -5,8 +5,8 @@ using Engine._10.CActiveDirectoryMgr;
 
 Console.WriteLine("Hello, World!");
 
-var path = CActiveDirectoryMgr.GetInstance().GetCurrentDomainPath();
-Console.WriteLine($"도메인 경로 == {path}");
+var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers();
+Console.WriteLine($"도메인 경로 == 123");
 
 /*
 var mgrInstance = CSceneMgr.GetInstance();
