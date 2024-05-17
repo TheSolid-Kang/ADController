@@ -1,6 +1,7 @@
 ﻿using Engine._01.DBMgr;
 using Engine._03.CFTPMgr;
 using Engine._08.CFileMgr;
+using Engine._10.CActiveDirectoryMgr;
 using Renci.SshNet.Sftp;
 using System;
 using System.Collections.Generic;
@@ -45,9 +46,10 @@ namespace ADController._01.CScene
             base.Render();
             _titles = new List<string>();
             _titles.Add("기능 선택");
-            _titles.Add("1. 그룹웨어 첨부파일 중 2023년 파일 전체 다운로드 ");
-            _titles.Add("2. 미완성_그룹웨어 첨부파일 중 쿼리에 맞는 파일만 다운로드 ");
-            _titles.Add("3. ");
+            _titles.Add("1. Get AD 사용자 정보");
+            _titles.Add("2. Get DB-HR 사용자 정보");
+            _titles.Add("3. Get DB-NAC 사용자 정보");
+            _titles.Add("4. ");
             _titles.Add("99.EXIT");
             _titles.ForEach(x => { Console.WriteLine(x); });
         }
@@ -92,7 +94,12 @@ namespace ADController._01.CScene
         /// <returns></returns>
         protected int Print1()
         {
-            
+            string path = "LDAP://10.225.88.70";
+            string username = "administrator";
+            string password = "yonwoo*211013";
+            var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
+            Console.WriteLine($"도메인 경로 == 123");
+
 
             return 1;
         }

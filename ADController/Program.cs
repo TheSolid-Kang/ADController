@@ -5,10 +5,6 @@ using Engine._10.CActiveDirectoryMgr;
 
 Console.WriteLine("Hello, World!");
 
-var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers();
-Console.WriteLine($"도메인 경로 == 123");
-
-/*
 var mgrInstance = CSceneMgr.GetInstance();
 int num = 0;
 do
@@ -30,4 +26,3 @@ void PrintTitle()
     titles.ForEach(x => { Console.WriteLine(x); });
 }
 
-*/

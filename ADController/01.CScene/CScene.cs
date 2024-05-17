@@ -68,6 +68,7 @@ namespace ADController._01.CScene
             Render();
             int num = CIO.AskAndReturnInteger();
             int result = Update(num);
+            Console.Clear();
 
             return result;
         }
