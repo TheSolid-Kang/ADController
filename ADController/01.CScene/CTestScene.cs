@@ -5,6 +5,7 @@ using Engine._10.CActiveDirectoryMgr;
 using Google.Protobuf.WellKnownTypes;
 using Renci.SshNet.Sftp;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -106,10 +107,28 @@ namespace ADController._01.CScene
             string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
             string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
+
+            Dictionary<string, List<Users>> mapADUsers = new Dictionary<string, List<Users>>();
+            mapADUsers.Add("HR계정", new List<Users>());
+            mapADUsers.Add("NAC계정", new List<Users>());
+            foreach (var keyPairs in mapADUsers)
+            {
+                string key = keyPairs.Key;
+                List<Users> values = keyPairs.Value;
+                ADUsers.ForEach(a =>
+                {
+                    if(true == a.distinguishedName.Contains(key))
+                        values.Add(a);
+                });
+            }
+
+            /*
             Users user = ADUsers[242];
             Console.WriteLine($"user.strobjectGUID == {user.strobjectGUID}  user.userPrincipalName == {user.userPrincipalName}");
             SortedSet<long> setUsersKey = new SortedSet<long>();
             ADUsers.ForEach(a => setUsersKey.Add(a.uSNCreated));
+            */
+
             return 1;
         }
         /// <summary>
@@ -119,7 +138,7 @@ namespace ADController._01.CScene
         protected int Print2()
         {
             string query = GetHRUserQuery();
-            using(var mgr = new MSSQL_Mgr())
+            using (var mgr = new MSSQL_Mgr())
             {
                 DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
                 Console.WriteLine("확인");
@@ -169,7 +188,7 @@ namespace ADController._01.CScene
         private string GetNACUserQuery()
         {
             StringBuilder strBuil = new StringBuilder();
-
+            //오늘 날짜 기준 재직중인 직원 전체 가져오기
             return strBuil.ToString();
         }
 
@@ -192,8 +211,101 @@ namespace ADController._01.CScene
             return strBuil.ToString();
         }
 
+        public int Print5()
+        {
+            //사용자 동기화 1번: 사용자 등록-이동-삭제
+            //1. 변수 초기화
+            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+
+            //2. AD NAC계정 사용자 생성
+            //if DB사원명부에 있는 사원이 AD사용자에 없는 경우
+            //AD NAC에 계정 생성
 
 
+            //3. AD HR계정으로 사용자 이동
+            //if DB사용자에 있는 사원이 mail이 있는 경우
+            //AD HR계정으로 OU이동
+
+
+            //4. AD 사용자 비활성화처리
+            //if AD사용자가 DB사원명부에 없는 경우
+            // 해당 사용자 retirement로 OU이동
+
+
+            return 1;
+        }
+        private Dictionary<string, List<Users>> GetMapADUsers()
+        {
+            List<string> keyOUs = new List<string>() { "HR계정", "NAC계정"};
+            return GetMapADUsers(keyOUs);
+        }
+        private Dictionary<string, List<Users>> GetMapADUsers(List<string> _keyOUs)
+        {
+            //1. Config 파일에서 LDAP 등록 정보 가져오기
+            string path = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
+            string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
+            string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
+
+            //2. AD에서 AD사용자 조회
+            var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
+            Dictionary<string, List<Users>> mapADUsers = new Dictionary<string, List<Users>>();
+            _keyOUs.ForEach(a => mapADUsers.Add(a, new List<Users>()));
+
+            //3. Map에 지정 된 OU별로 AD사용자 등록
+            foreach (var keyPairs in mapADUsers)
+            {
+                string key = keyPairs.Key;
+                List<Users> values = keyPairs.Value;
+                ADUsers.ForEach(a =>
+                {
+                    if (true == a.distinguishedName.Contains(key))
+                        values.Add(a);
+                });
+            }
+
+            //4. RETURN
+            return mapADUsers;
+        }
+        private List<Users> GetADUsersTbl_IF()
+        {
+            List<Users> ADUsersERP_IF = new List<Users>();
+            string query = "SELECT * FROM _TADUsers_IF";
+            using (var mgr = new MSSQL_Mgr())
+            {
+                DataTable dataTable = mgr.GetDataTable(DbMgr.DB_CONNECTION.YWDEV, query);
+                ADUsersERP_IF = new List<Users>(dataTable.Rows.Count);
+
+                //DataTable -> Users의 Property멤버변수
+                foreach (var row in dataTable.Rows)
+                {
+                    
+                }
+                Console.WriteLine("확인");
+            }
+            return ADUsersERP_IF;
+        }
+
+        /// <summary>
+        /// AD사용자동기화조회_yw 화면 개발
+        /// </summary>
+        /// <returns></returns>
+        public int Print7()
+        {
+            //AD사용자동기화조회_ywq
+            //1. 변수 초기화
+            //가. 현재 AD정보 가져오기
+            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            //나. ERP의 _TADUsers_IF테이블 데이터 가져오기
+            
+
+
+            //2. _TADUsers_IF 테이블에 데이터 INSERT, UPDATE 쿼리 작성
+
+            //3. 
+
+
+            return 1;
+        }
         #endregion
     }
 }

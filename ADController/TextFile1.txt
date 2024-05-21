@@ -1,36 +1,30 @@
-﻿cn
-description
-department
-displayName
-distinguishedName
-givenName
-homePhone
-lastLogon
-lastLogonTimestamp
-name
-otherHomePhone
-otherMobile
-primaryGroupID
-pwdLastSet
-sn
-title
-mail
-manager
-sAMAccountName
-userGroup
-userPrincipalName
-uSNChanged
-uSNCreated
-whenChanged
-whenCreated
+﻿* AD프로그램 로직 
+1. 사용자 동기화 조회
+	가. AD 사용자 조회
+	나. ERP 사용자 조회
+		1) ERP HR계정 사용자 조회
+		-> IDCenter로 가는 사용자 조회
+		2) ERP NAC계정 사용자 조회
+		-> 전체 재직중인 사원 중 IDCenter로 가지 않는 사원 조회
+	다. IDCenter 사용자 조회
+	-> 
 
 
-givenName//이름
-homePhone//내선번호
-name//이름전체
-otherHomePhone//기타내선번호
-otherMobile//기타휴대폰번호
-sn//성
-title//직급
-manager//관리자
-userPrincipalName//yonwoo.cos/yonwookorea.com구분
+
+* 생산3동 1층 공사
+1. 
+2. 
+
+
+
+* 생산4동 1층 실사
+1. 생산 4동 1층 사무실에 있는 스위치랙에 스위치 2~4개 설치 가능한지 확인
+2. 허스키장비에 걸려있는 LAN 원선이 어디서 나왔는지 확인
+3. 허스키 설비의 LAN의 원선이 생산 4동 1층이 아닌 경우 4동 1층에서부터 LAN 끌어오는 거로 견적 잡기
+4. 생산 4동 1층의 스위치 설치 추천 위치 확인
+5. 생산 4동 1층 사진 찍어오기
+
+6. 공사 가능일자 문의//이후 팀장님께 가능일자 보고
+7. 
+
+
