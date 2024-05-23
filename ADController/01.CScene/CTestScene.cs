@@ -56,7 +56,7 @@ namespace ADController._01.CScene
             _titles.Add("4. Get IDCenter 사용자 정보");
             _titles.Add("5. Insert yw_TADUsers_IF ");
             _titles.Add("6. ");
-            _titles.Add("7. ");
+            _titles.Add("7. AD사용자동기화조회_yw 화면 개발");
             _titles.Add("8. ");
             _titles.Add("9. ");
             _titles.Add("99.EXIT");
@@ -111,7 +111,7 @@ namespace ADController._01.CScene
             return result;
         }
         #endregion 
-        #region 내장 멤버함수
+        #region 테스트 케이스 멤버함수
         /// <summary>
         /// 1. Get AD 사용자 정보
         /// </summary>
@@ -133,7 +133,7 @@ namespace ADController._01.CScene
                 List<Users> values = keyPairs.Value;
                 ADUsers.ForEach(a =>
                 {
-                    if(true == a.distinguishedName.Contains(key))
+                    if (true == a.distinguishedName.Contains(key))
                         values.Add(a);
                 });
             }
@@ -160,6 +160,113 @@ namespace ADController._01.CScene
                 Console.WriteLine("확인");
             }
             return 1;
+        }
+        /// <summary>
+        /// 3. Get DB-NAC 사용자 정보
+        /// </summary>
+        /// <returns></returns>
+        protected int Print3()
+        {
+            string query = GetHRUserQuery();
+            return 1;
+        }
+        protected int Print4()
+        {
+            string query = GetIDCnterUserQuery();
+            using (var mgr = new MSSQL_Mgr())
+            {
+                DataTable dataTable = mgr.GetDataTable(DbMgr.DB_CONNECTION.YQMS, query);
+                Console.WriteLine("확인");
+            }
+            return 1;
+        }
+        /// <summary>
+        /// yw_TADUsers_IF 테이블에 AD 사용자 정보 INSERT, UPDATE
+        /// </summary>
+        /// <returns></returns>
+        public int Print5()
+        {
+            SaveErpAdUsersTbl_IF();
+            return 1;
+        }
+        /// <summary>
+        /// yw_TADUsers_IF 테이블 조회
+        /// </summary>
+        /// <returns></returns>
+        public int Print6()
+        {
+
+            //사용자 동기화 1번: 사용자 등록-이동-삭제
+            //1. 변수 초기화
+            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+
+            //2. AD NAC계정 사용자 생성
+            //if DB사원명부에 있는 사원이 AD사용자에 없는 경우
+            //AD NAC에 계정 생성
+
+
+            //3. AD HR계정으로 사용자 이동
+            //if DB사용자에 있는 사원이 mail이 있는 경우
+            //AD HR계정으로 OU이동
+
+
+            //4. AD 사용자 비활성화처리
+            //if AD사용자가 DB사원명부에 없는 경우
+            // 해당 사용자 retirement로 OU이동
+
+
+
+            return 1;
+        }
+        /// <summary>
+        /// AD사용자동기화조회_yw 화면 개발
+        /// </summary>
+        /// <returns></returns>
+        public int Print7()
+        {
+            //AD사용자동기화조회_ywq
+            //1. 변수 초기화
+            //가. 현재 AD정보 가져오기
+            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            //나. ERP의 _TADUsers_IF테이블 데이터 가져오기
+            List<yw_TADUsers_IF> yw_TADUsers_IFs = GetErpAdUsersTbl_IF();
+            //다. ERP의 HR 유저 정보 가져오기
+            DataTable dataTable = GetErpHrUsers();
+            //라. ERP의 NAC 유저 정보 가져오기
+
+            //2. _TADUsers_IF 테이블에 데이터 INSERT, UPDATE 쿼리 작성
+
+            //3. 
+
+
+            return 1;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public int Print8()
+        {
+
+
+
+            return 1;
+        }
+        #endregion
+
+        #region 기능 멤버함수
+        private string GetIDCnterUserQuery()
+        {
+            StringBuilder strBuil = new StringBuilder();
+            strBuil.AppendLine("SELECT * FROM VW_VGMP_IDCENTER");
+            strBuil.AppendLine("SELECT * FROM _TDAEmp");
+            return strBuil.ToString();
+        }
+        private string GetNACUserQuery()
+        {
+            StringBuilder strBuil = new StringBuilder();
+            //오늘 날짜 기준 재직중인 직원 전체 가져오기
+            return strBuil.ToString();
         }
         private string GetHRUserQuery()
         {
@@ -190,43 +297,6 @@ namespace ADController._01.CScene
             strBuil.AppendLine("ORDER BY A.EmpID ASC                                                                                                                                                                ");
             return strBuil.ToString();
         }
-
-        /// <summary>
-        /// 3. Get DB-NAC 사용자 정보
-        /// </summary>
-        /// <returns></returns>
-        protected int Print3()
-        {
-            string query = GetHRUserQuery();
-            return 1;
-        }
-
-        private string GetNACUserQuery()
-        {
-            StringBuilder strBuil = new StringBuilder();
-            //오늘 날짜 기준 재직중인 직원 전체 가져오기
-            return strBuil.ToString();
-        }
-
-        protected int Print4()
-        {
-            string query = GetIDCnterUserQuery();
-            using (var mgr = new MSSQL_Mgr())
-            {
-                DataTable dataTable = mgr.GetDataTable(DbMgr.DB_CONNECTION.YQMS, query);
-                Console.WriteLine("확인");
-            }
-            return 1;
-        }
-
-        private string GetIDCnterUserQuery()
-        {
-            StringBuilder strBuil = new StringBuilder();
-            strBuil.AppendLine("SELECT * FROM VW_VGMP_IDCENTER");
-            strBuil.AppendLine("SELECT * FROM _TDAEmp");
-            return strBuil.ToString();
-        }
-
         private Dictionary<string, List<Users>> GetMapADUsers()
         {
             List<string> keyOUs = new List<string>() { "HR계정", "NAC계정" };
@@ -259,113 +329,61 @@ namespace ADController._01.CScene
             //4. RETURN
             return mapADUsers;
         }
-        private List<Users> GetADUsersTbl_IF()
-        {
-            List<Users> ADUsersERP_IF = new List<Users>();
-            string query = "SELECT * FROM yw_TADUsers_IF";
-            using (var mgr = new MSSQL_Mgr())
-            {
-                DataTable dataTable = mgr.GetDataTable(DbMgr.DB_CONNECTION.YWDEV, query);
-                ADUsersERP_IF = new List<Users>(dataTable.Rows.Count);
-
-                //DataTable -> Users의 Property멤버변수
-                foreach (var row in dataTable.Rows)
-                {
-
-                }
-                Console.WriteLine("확인");
-            }
-            return ADUsersERP_IF;
-        }
-        /// <summary>
-        /// yw_TADUsers_IF 테이블에 AD 사용자 정보 INSERT, UPDATE
-        /// </summary>
-        /// <returns></returns>
-        public int Print5()
+        private void SaveErpAdUsersTbl_IF()
         {
             //1. 변수 초기화
             Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
 
             //2. Insert Query
-            using(var  mgr = new MSSQL_Mgr())
+            using (var mgr = new MSSQL_Mgr())
             {
-                foreach(var keyPairs in mapADUsers)
+                foreach (var keyPairs in mapADUsers)
                 {
                     List<Users> adUsers = keyPairs.Value;
-                    adUsers.ForEach(adUser => mgr.InsertData<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser) );
+                    adUsers.ForEach(adUser => mgr.InsertData<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser));
                 }
             }
 
             //3. Update Query 작성
-            return 1;
         }
-
-
-
-
-        /// <summary>
-        /// yw_TADUsers_IF 테이블 조회
-        /// </summary>
-        /// <returns></returns>
-        public int Print6()
+        private List<yw_TADUsers_IF> GetErpAdUsersTbl_IF()
         {
-
-            //사용자 동기화 1번: 사용자 등록-이동-삭제
-            //1. 변수 초기화
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
-
-            //2. AD NAC계정 사용자 생성
-            //if DB사원명부에 있는 사원이 AD사용자에 없는 경우
-            //AD NAC에 계정 생성
-
-
-            //3. AD HR계정으로 사용자 이동
-            //if DB사용자에 있는 사원이 mail이 있는 경우
-            //AD HR계정으로 OU이동
-
-
-            //4. AD 사용자 비활성화처리
-            //if AD사용자가 DB사원명부에 없는 경우
-            // 해당 사용자 retirement로 OU이동
-
-
-
-            return 1;
+            List<yw_TADUsers_IF> yw_TADUsers_IFs = new List<yw_TADUsers_IF>();
+            using (var mgr = new MSSQL_Mgr())
+            {
+                string query = "SELECT * FROM yw_TADUsers_IF";
+                DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
+                yw_TADUsers_IFs = new List<yw_TADUsers_IF>(dataTable.Rows.Count);
+                foreach (DataRow dataRow in dataTable.Rows)
+                {
+                    yw_TADUsers_IF? obj = System.Activator.CreateInstance<yw_TADUsers_IF>();
+                    foreach (System.Reflection.PropertyInfo prop in obj.GetType().GetProperties())
+                    {
+                        if (!object.Equals(dataRow[prop.Name], System.DBNull.Value))
+                        {
+                            prop.SetValue(obj, dataRow[prop.Name], null);
+                        }
+                    }
+                    yw_TADUsers_IFs.Add(obj);
+                }
+            }
+            return yw_TADUsers_IFs;
         }
-
-
-        /// <summary>
-        /// AD사용자동기화조회_yw 화면 개발
-        /// </summary>
-        /// <returns></returns>
-        public int Print7()
+        private DataTable GetErpHrUsers()
         {
-            //AD사용자동기화조회_ywq
-            //1. 변수 초기화
-            //가. 현재 AD정보 가져오기
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
-            //나. ERP의 _TADUsers_IF테이블 데이터 가져오기
-            
-
-
-            //2. _TADUsers_IF 테이블에 데이터 INSERT, UPDATE 쿼리 작성
-
-            //3. 
-
-
-            return 1;
+            DataTable dataTable = new DataTable();
+            using (var mgr = new MSSQL_Mgr())
+            {
+                string query = GetHRUserQuery();
+                dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
+            }
+            return dataTable;
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public int Print8()
+        private DataTable GetErpNacUsers()
         {
+            DataTable dataTable = new DataTable();
 
-
-
-            return 1;
+            return dataTable;
         }
         #endregion
     }
