@@ -2,6 +2,7 @@
 using Engine._03.CFTPMgr;
 using Engine._08.CFileMgr;
 using Engine._10.CActiveDirectoryMgr;
+using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Ocsp;
@@ -228,10 +229,13 @@ namespace ADController._01.CScene
         /// <returns></returns>
         public int Print7()
         {
+            
             //AD사용자동기화조회_yw
             //1. 변수 초기화
             //가. 현재 AD정보 가져오기
             Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            DataTable adNacUsers = ToDataTable<Users>(mapADUsers["NAC계정"]);
+            DataTable adHrUsers = ToDataTable<Users>(mapADUsers["HR계정"]);
             //나. ERP의 _TADUsers_IF테이블 데이터 가져오기
             List<yw_TADUsers_IF> yw_TADUsers_IFs = GetErpAdUsersTbl_IF();
             //다. ERP의 HR 유저 정보 가져오기
@@ -241,6 +245,20 @@ namespace ADController._01.CScene
 
 
             //2. _TADUsers_IF 테이블에 데이터 INSERT, UPDATE 쿼리 작성
+            //  가. INSERT 
+            //      1) AD-NAC 등록   : ERP의 NAC에 등록 된 유저가 AD의 NAC에 없는 경우
+            //mapADUsers["NAC계정"]
+            //      2) AD-NAC 비활성 : ERP의 NAC에 없는 유저가 AD의 NAC에 있는 경우
+            
+            //      3) AD-HR 등록    : ERP의 HR에 등록 된 유저가 AD의 HR에 없는 경우
+            
+            //      4) AD-NAC 비활성 : ERP의 HR에 없는 유저가 AD의 HR에 있는 경우
+
+            //  나. UPDATE
+            //      1) AD-NAC 수정   : ERP의 NAC에 등록 된 유저가 AD의 NAC에 등록 된 유저의 정보와 다를 경우
+            //      2) AD-HR  수정   : ERP의 HR에 등록 된 유저가 AD의 HR에 등록 된 유저의 정보와 다를 경우
+
+
 
             //3. 
 
@@ -346,6 +364,8 @@ namespace ADController._01.CScene
             string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
             string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
 
+            //var dataTable = CActiveDirectoryMgr.GetInstance().GetDataTable<Users>(path, username, password);
+
             //2. AD에서 AD사용자 조회
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
             Dictionary<string, List<Users>> mapADUsers = new Dictionary<string, List<Users>>();
@@ -365,23 +385,6 @@ namespace ADController._01.CScene
 
             //4. RETURN
             return mapADUsers;
-        }
-        private void SaveErpAdUsersTbl_IF()
-        {
-            //1. 변수 초기화
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
-
-            //2. Insert Query
-            using (var mgr = new MSSQL_Mgr())
-            {
-                foreach (var keyPairs in mapADUsers)
-                {
-                    List<Users> adUsers = keyPairs.Value;
-                    adUsers.ForEach(adUser => mgr.InsertData<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser));
-                }
-            }
-
-            //3. Update Query 작성
         }
         private List<yw_TADUsers_IF> GetErpAdUsersTbl_IF()
         {
@@ -406,37 +409,6 @@ namespace ADController._01.CScene
             }
             return yw_TADUsers_IFs;
         }
-        private DataTable GetSHRInfEmpList()
-        {
-            DataTable dataTable = new DataTable();
-            StringBuilder strBuil = new StringBuilder();
-            var curDate = DateTime.Now.ToString("yyyyMMdd");
-            strBuil.AppendLine($"<ROOT>");
-            strBuil.AppendLine($"  <DataBlock1>");
-            strBuil.AppendLine($"    <IsChangedMst>0</IsChangedMst>");
-            strBuil.AppendLine($"    <BaseDate>{curDate}</BaseDate>");
-            strBuil.AppendLine($"    <SMIsOrd>3093001</SMIsOrd>");
-            strBuil.AppendLine($"    <EntRetType>3031001</EntRetType>");
-            strBuil.AppendLine($"    <IsLowDept>0</IsLowDept>");
-            strBuil.AppendLine($"  </DataBlock1>");
-            strBuil.AppendLine($"</ROOT>");
-
-            string xmlDocument = strBuil.ToString();
-            int xmlFlags = 2;
-            int LanguageSeq = 1;
-            using (var mgr = new MSSQL_Mgr())
-            {
-                var sqlParameters = new[] {
-                    new SqlParameter {ParameterName = "@xmlDocument", Direction = ParameterDirection.Input, Value = xmlDocument }
-                    , new SqlParameter {ParameterName = "@xmlFlags", Direction = ParameterDirection.Input, Value = xmlFlags }
-                    , new SqlParameter {ParameterName = "@LanguageSeq", Direction = ParameterDirection.Input, Value = LanguageSeq }
-                };
-                var dataSet = mgr.GetSPDataSet(DbMgr.DB_CONNECTION.YWDEV, "YW_SHRInfEmpList", sqlParameters);
-                dataTable = dataSet.Tables[1];
-            }
-
-            return dataTable;
-        }
         private DataTable GetErpHrUsers()
         {
             DataTable dataTable = new DataTable();
@@ -456,6 +428,47 @@ namespace ADController._01.CScene
                 dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
             }
             return dataTable;
+        }
+        private void SaveErpAdUsersTbl_IF()
+        {
+            //1. 변수 초기화
+            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+
+            //2. Insert Query
+            using (var mgr = new MSSQL_Mgr())
+            {
+                foreach (var keyPairs in mapADUsers)
+                {
+                    List<Users> adUsers = keyPairs.Value;
+                    adUsers.ForEach(adUser => mgr.InsertData<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser));
+                }
+            }
+
+            //3. Update Query 작성
+        }
+        public DataTable ToDataTable<T>(List<T>? items)
+        {
+            var tb = new DataTable(typeof(T).Name);
+
+            PropertyInfo[] props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var prop in props)
+            {
+                tb.Columns.Add(prop.Name, prop.PropertyType);
+            }
+
+            foreach (var item in items)
+            {
+                var values = new object[props.Length];
+                for (var i = 0; i < props.Length; i++)
+                {
+                    values[i] = props[i].GetValue(item, null);
+                }
+
+                tb.Rows.Add(values);
+            }
+
+            return tb;
         }
         #endregion
     }
