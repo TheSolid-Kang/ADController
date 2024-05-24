@@ -239,7 +239,7 @@ namespace ADController._01.CScene
             //라. ERP의 HR 유저 정보 가져오기
             DataTable ErpHrUsers = GetErpHrUsers();
             //마. ERP의 NAC 유저 정보 가져오기
-            DataTable ErpNacUsers = GetErpNacUsers(SHRInfEmpList, ErpHrUsers);
+            DataTable ErpNacUsers = GetErpNacUsers();
 
 
             //2. _TADUsers_IF 테이블에 데이터 INSERT, UPDATE 쿼리 작성
@@ -449,33 +449,15 @@ namespace ADController._01.CScene
             }
             return dataTable;
         }
-        private DataTable GetErpNacUsers(DataTable SHRInfEmpList, DataTable ErpHrUsers)
+        private DataTable GetErpNacUsers()
         {
-            DataTable ErpNacUsers = SHRInfEmpList.Copy();
-            //ErpNacUsers.Clear();
-
-            List<string> EmpIDs = new List<string>(ErpHrUsers.Rows.Count);
-
-            for (int i = 0; i < ErpHrUsers?.Rows.Count; ++i)
-                EmpIDs.Add(ErpHrUsers?.Rows[i]["EmpID"].ToString());
-
-            Console.WriteLine("2");
-
-            EmpIDs.ForEach(empID =>
+            DataTable dataTable = new DataTable();
+            using (var mgr = new MSSQL_Mgr())
             {
-                var row = ErpNacUsers.Select($"EmpID = {empID}").First();
-                if (row != null)
-                {
-                    ErpNacUsers.Rows.Remove(row);
-                }
-                //bool isContain = SHRInfEmpList.Rows.Contains($"EmpID = empID");
-                //var t = ErpNacUsers.Rows.IndexOf(empID);
-                ////ErpNacUsers.Select($"EmpId = {empID}").First();
-                //ErpNacUsers.Rows.Remove();
-                //var DataRow = SHRInfEmpList.Select($"EmpId = {empID}").First();
-                //SHRInfEmpList.
-            });
-            return ErpNacUsers;
+                string query = GetNacEmpQuery();
+                dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
+            }
+            return dataTable;
         }
         #endregion
     }
