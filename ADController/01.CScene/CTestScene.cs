@@ -228,17 +228,15 @@ namespace ADController._01.CScene
         /// <returns></returns>
         public int Print7()
         {
-            //AD사용자동기화조회_ywq
+            //AD사용자동기화조회_yw
             //1. 변수 초기화
             //가. 현재 AD정보 가져오기
             Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
             //나. ERP의 _TADUsers_IF테이블 데이터 가져오기
             List<yw_TADUsers_IF> yw_TADUsers_IFs = GetErpAdUsersTbl_IF();
-            //다. ERP 사원명부 조회
-            DataTable SHRInfEmpList = GetSHRInfEmpList();
-            //라. ERP의 HR 유저 정보 가져오기
+            //다. ERP의 HR 유저 정보 가져오기
             DataTable ErpHrUsers = GetErpHrUsers();
-            //마. ERP의 NAC 유저 정보 가져오기
+            //라. ERP의 NAC 유저 정보 가져오기
             DataTable ErpNacUsers = GetErpNacUsers();
 
 
