@@ -30,61 +30,61 @@
 
 
 
-strBuild.AppendLine("SELECT																																																 ");
-strBuild.AppendLine("A.EmpID--사번																																													     ");
-strBuild.AppendLine(", A.EmpSeq--사원내부코드																																											 ");
-strBuild.AppendLine(", Z.CellPhone--휴대폰번호																																											 ");
-strBuild.AppendLine(", B.DeptSeq																																														 ");
-strBuild.AppendLine(", N'' AS PwdMailAdder																																												 ");
-strBuild.AppendLine(", N'' AS PersonId																																													 ");
-strBuild.AppendLine(", D.EmpEngFirstName																																												 ");
-strBuild.AppendLine(", D.EmpEngLastName																																													 ");
-strBuild.AppendLine(", D.EmpName																																														 ");
-strBuild.AppendLine(", D.EmpFamilyName --성																																												 ");
-strBuild.AppendLine(", D.EmpFirstName --이름																																											 ");
-strBuild.AppendLine("																																																	 ");
-strBuild.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																															 ");
-strBuild.AppendLine(", E.DeptName AS department																																											 ");
-strBuild.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																												 ");
-strBuild.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																													 ");
-strBuild.AppendLine(", F.MinorName AS title --직위																																									     ");
-strBuild.AppendLine(", G.MinorName AS 직급																																											     ");
-strBuild.AppendLine(", H.MinorName AS 직책																																											     ");
-strBuild.AppendLine(", N'' AS mail																																														 ");
-strBuild.AppendLine(", A.EmpID AS sAMAccountName																																										 ");
-strBuild.AppendLine("FROM _fnAdmEmpOrdRetResidId(1, CONVERT(NCHAR(8), GETDATE(), 112)) AS A																																 ");
-strBuild.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																										 ");
-strBuild.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END										 ");
-strBuild.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END									 ");
-strBuild.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON B.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																										 ");
-strBuild.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																		 ");
-strBuild.AppendLine("-- 직위를 가져오기 위한 조인																																										 ");
-strBuild.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																							 ");
-strBuild.AppendLine("-- 직급을 가져오기 위한 조인																																										 ");
-strBuild.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																							 ");
-strBuild.AppendLine("-- 직책을 가져오기 위한 조인  																																									  	 ");
-strBuild.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																						 ");
-strBuild.AppendLine("																																																	 ");
-strBuild.AppendLine("																																																	 ");
-strBuild.AppendLine("INNER JOIN _TDAEmpIn AS Z WITH(NOLOCK) ON B.CompanySeq = Z.CompanySeq AND A.EmpId = Z.EmpId																										 ");
-strBuild.AppendLine("WHERE 1=1																																															 ");
-strBuild.AppendLine("	AND OrdName NOT IN(N'')																																											 ");
-strBuild.AppendLine("	AND RetDate = N''																																												 ");
-strBuild.AppendLine("	AND A.EmpId NOT IN																																												 ");
-strBuild.AppendLine("	(																																																 ");
-strBuild.AppendLine("		SELECT																																														 ");
-strBuild.AppendLine("		A.EmpID--사번																																												 ");
-strBuild.AppendLine("		FROM _TDAEmpIn AS A WITH(NOLOCK)																																							 ");
-strBuild.AppendLine("		INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																	 ");
-strBuild.AppendLine("		    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
-strBuild.AppendLine("		    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
-strBuild.AppendLine("		INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.			 ");
-strBuild.AppendLine("		INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																									 ");
-strBuild.AppendLine("		WHERE 1 = 1																																													 ");
-strBuild.AppendLine("		    AND C.UserSeq NOT IN(1)--마스터 제외																																					 ");
-strBuild.AppendLine("		    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																							 ");
-strBuild.AppendLine("	)																																																 ");
-strBuild.AppendLine("ORDER BY A.EmpID ASC																																												 ");
+strBuil.AppendLine("SELECT																																																 ");
+strBuil.AppendLine("A.EmpID--사번																																													     ");
+strBuil.AppendLine(", A.EmpSeq--사원내부코드																																											 ");
+strBuil.AppendLine(", Z.CellPhone--휴대폰번호																																											 ");
+strBuil.AppendLine(", B.DeptSeq																																														 ");
+strBuil.AppendLine(", N'' AS PwdMailAdder																																												 ");
+strBuil.AppendLine(", N'' AS PersonId																																													 ");
+strBuil.AppendLine(", D.EmpEngFirstName																																												 ");
+strBuil.AppendLine(", D.EmpEngLastName																																													 ");
+strBuil.AppendLine(", D.EmpName																																														 ");
+strBuil.AppendLine(", D.EmpFamilyName --성																																												 ");
+strBuil.AppendLine(", D.EmpFirstName --이름																																											 ");
+strBuil.AppendLine("																																																	 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																															 ");
+strBuil.AppendLine(", E.DeptName AS department																																											 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																												 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																													 ");
+strBuil.AppendLine(", F.MinorName AS title --직위																																									     ");
+strBuil.AppendLine(", G.MinorName AS 직급																																											     ");
+strBuil.AppendLine(", H.MinorName AS 직책																																											     ");
+strBuil.AppendLine(", N'' AS mail																																														 ");
+strBuil.AppendLine(", A.EmpID AS sAMAccountName																																										 ");
+strBuil.AppendLine("FROM _fnAdmEmpOrdRetResidId(1, CONVERT(NCHAR(8), GETDATE(), 112)) AS A																																 ");
+strBuil.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																										 ");
+strBuil.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END										 ");
+strBuil.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END									 ");
+strBuil.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON B.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																										 ");
+strBuil.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																		 ");
+strBuil.AppendLine("-- 직위를 가져오기 위한 조인																																										 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																							 ");
+strBuil.AppendLine("-- 직급을 가져오기 위한 조인																																										 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																							 ");
+strBuil.AppendLine("-- 직책을 가져오기 위한 조인  																																									  	 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																						 ");
+strBuil.AppendLine("																																																	 ");
+strBuil.AppendLine("																																																	 ");
+strBuil.AppendLine("INNER JOIN _TDAEmpIn AS Z WITH(NOLOCK) ON B.CompanySeq = Z.CompanySeq AND A.EmpId = Z.EmpId																										 ");
+strBuil.AppendLine("WHERE 1=1																																															 ");
+strBuil.AppendLine("	AND OrdName NOT IN(N'')																																											 ");
+strBuil.AppendLine("	AND RetDate = N''																																												 ");
+strBuil.AppendLine("	AND A.EmpId NOT IN																																												 ");
+strBuil.AppendLine("	(																																																 ");
+strBuil.AppendLine("		SELECT																																														 ");
+strBuil.AppendLine("		A.EmpID--사번																																												 ");
+strBuil.AppendLine("		FROM _TDAEmpIn AS A WITH(NOLOCK)																																							 ");
+strBuil.AppendLine("		INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																	 ");
+strBuil.AppendLine("		    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
+strBuil.AppendLine("		    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
+strBuil.AppendLine("		INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.			 ");
+strBuil.AppendLine("		INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																									 ");
+strBuil.AppendLine("		WHERE 1 = 1																																													 ");
+strBuil.AppendLine("		    AND C.UserSeq NOT IN(1)--마스터 제외																																					 ");
+strBuil.AppendLine("		    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																							 ");
+strBuil.AppendLine("	)																																																 ");
+strBuil.AppendLine("ORDER BY A.EmpID ASC																																												 ");
 
 
 
@@ -127,5 +127,294 @@ strBuil.AppendLine("WHERE 1 = 1																																																	
 strBuil.AppendLine("    AND C.UserSeq NOT IN(1)--마스터 제외																																											  ");
 strBuil.AppendLine("    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																													  ");
 strBuil.AppendLine("ORDER BY A.EmpID ASC																																																  ");
+
+
+
+
+
+
+
+
+strBuil.AppendLine("SELECT																																																																																							 ");
+strBuil.AppendLine("--A.EmpID--사번																																																																																			 ");
+strBuil.AppendLine("--, A.EmpSeq--사원내부코드																																																																													 ");
+strBuil.AppendLine("--, Z.CellPhone--휴대폰번호																																																																													 ");
+strBuil.AppendLine("--, B.DeptSeq																																																																																				 ");
+strBuil.AppendLine("--, N'' AS PwdMailAdder																																																																															 ");
+strBuil.AppendLine("--, N'' AS PersonId																																																																																	 ");
+strBuil.AppendLine("--, D.EmpEngFirstName																																																																																 ");
+strBuil.AppendLine("--, D.EmpEngLastName																																																																																 ");
+strBuil.AppendLine("--, D.EmpName																																																																																				 ");
+strBuil.AppendLine("--, D.EmpFamilyName --성																																																																														 ");
+strBuil.AppendLine("--, D.EmpFirstName --이름																																																																														 ");
+strBuil.AppendLine("--, G.MinorName AS 직급																																																																															 ");
+strBuil.AppendLine("--, H.MinorName AS 직책																																																																															 ");
+strBuil.AppendLine("																																																																																										 ");
+strBuil.AppendLine("N'' AS AdUserSeq																																																																																		 ");
+strBuil.AppendLine(", N'' AS uSNCreated																																																																																	 ");
+strBuil.AppendLine(", N'' AS description																																																																																 ");
+strBuil.AppendLine(", N'' AS distinguishedName																																																																													 ");
+strBuil.AppendLine(", N'' AS homePhone																																																																																	 ");
+strBuil.AppendLine(", N'' AS lastLogon																																																																																	 ");
+strBuil.AppendLine(", N'' AS otherHomePhone																																																																															 ");
+strBuil.AppendLine(", N'' AS otherMobile																																																																																 ");
+strBuil.AppendLine(", N'' AS pwdLastSet																																																																																	 ");
+strBuil.AppendLine(", N'' AS sn																																																																																					 ");
+strBuil.AppendLine(", N'' AS manager																																																																																		 ");
+strBuil.AppendLine(", N'' AS sAMAccountName																																																																															 ");
+strBuil.AppendLine(", N'' AS userPrincipalName																																																																													 ");
+strBuil.AppendLine(", N'' AS uSNChanged																																																																																	 ");
+strBuil.AppendLine(", N'' AS whenChanged																																																																																 ");
+strBuil.AppendLine(", N'' AS whenCreated																																																																																 ");
+strBuil.AppendLine("																																																																																										 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																																																					 ");
+strBuil.AppendLine(", E.DeptName AS department																																																																													 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																																																	 ");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																																																		 ");
+strBuil.AppendLine(", F.MinorName AS title --직위																																																																												 ");
+strBuil.AppendLine(", N'' AS mail																																																																																				 ");
+strBuil.AppendLine(", A.EmpID AS sAMAccountName																																																																													 ");
+strBuil.AppendLine("FROM _fnAdmEmpOrdRetResidId(1, CONVERT(NCHAR(8), GETDATE(), 112)) AS A																																																							 ");
+strBuil.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																																													 ");
+strBuil.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END												 ");
+strBuil.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END											 ");
+strBuil.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON B.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																																													 ");
+strBuil.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																																											 ");
+strBuil.AppendLine("-- 직위를 가져오기 위한 조인																																																																												 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																																					 ");
+strBuil.AppendLine("-- 직급을 가져오기 위한 조인																																																																												 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																																						 ");
+strBuil.AppendLine("-- 직책을 가져오기 위한 조인  																																																																											 ");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																																				 ");
+strBuil.AppendLine("																																																																																										 ");
+strBuil.AppendLine("INNER JOIN _TDAEmpIn AS Z WITH(NOLOCK) ON B.CompanySeq = Z.CompanySeq AND A.EmpId = Z.EmpId																																													 ");
+strBuil.AppendLine("WHERE 1=1																																																																																						 ");
+strBuil.AppendLine("	AND OrdName NOT IN(N'')																																																																														 ");
+strBuil.AppendLine("	AND RetDate = N''																																																																																	 ");
+strBuil.AppendLine("	AND A.EmpId NOT IN																																																																																 ");
+strBuil.AppendLine("	(																																																																																									 ");
+strBuil.AppendLine("		SELECT																																																																																					 ");
+strBuil.AppendLine("		A.EmpID--사번																																																																																		 ");
+strBuil.AppendLine("		FROM _TDAEmpIn AS A WITH(NOLOCK)																																																																								 ");
+strBuil.AppendLine("		INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																											 ");
+strBuil.AppendLine("		    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END										 ");
+strBuil.AppendLine("		    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END									 ");
+strBuil.AppendLine("		INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.");
+strBuil.AppendLine("		INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																																											 ");
+strBuil.AppendLine("		WHERE 1 = 1																																																																																			 ");
+strBuil.AppendLine("		    AND C.UserSeq NOT IN(1)--마스터 제외																																																																				 ");
+strBuil.AppendLine("		    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																																							 ");
+strBuil.AppendLine("	)																																																																																									 ");
+strBuil.AppendLine("ORDER BY A.EmpID ASC																																																																																 ");
+
+
+
+
+strBuil.AppendLine("SELECT																																																																																										  ");
+strBuil.AppendLine("－－A.EmpID--사번																																																																																						");
+strBuil.AppendLine("－－, A.EmpSeq--사원내부코드																																																																																");
+strBuil.AppendLine("－－, A.CellPhone--휴대폰번호																																																																																");
+strBuil.AppendLine("－－, B.DeptSeq																																																																																							");
+strBuil.AppendLine("－－, C.PwdMailAdder--이메일																																																																																");
+strBuil.AppendLine("－－, CASE WHEN CHARINDEX('@', C.PwdMailAdder) > 1 THEN SUBSTRING(C.PwdMailAdder, 1, CHARINDEX('@', C.PwdMailAdder) - 1) ELSE '' END PersonId --아이디 nvarchar(20)													");
+strBuil.AppendLine("－－, D.EmpEngFirstName																																																																																			");
+strBuil.AppendLine("－－, D.EmpEngLastName																																																																																			");
+strBuil.AppendLine("－－, D.EmpName																																																																																							");
+strBuil.AppendLine("－－, D.EmpFamilyName --성																																																																																	");
+strBuil.AppendLine("－－, D.EmpFirstName --이름																																																																																	");
+strBuil.AppendLine("－－, G.MinorName AS 직급																																																																																		");
+strBuil.AppendLine("－－, H.MinorName AS 직책																																																																																		");
+strBuil.AppendLine("																																																																																														");
+strBuil.AppendLine("																																																																																														");
+strBuil.AppendLine("N'' AS AdUserSeq																																																																																						");
+strBuil.AppendLine(", N'' AS uSNCreated																																																																																					");
+strBuil.AppendLine(", N'' AS description																																																																																				");
+strBuil.AppendLine(", N'' AS distinguishedName																																																																																	");
+strBuil.AppendLine(", N'' AS homePhone																																																																																					");
+strBuil.AppendLine(", N'' AS lastLogon																																																																																					");
+strBuil.AppendLine(", N'' AS otherHomePhone																																																																																			");
+strBuil.AppendLine(", N'' AS otherMobile																																																																																				");
+strBuil.AppendLine(", N'' AS pwdLastSet																																																																																					");
+strBuil.AppendLine(", N'' AS sn																																																																																									");
+strBuil.AppendLine(", N'' AS manager																																																																																						");
+strBuil.AppendLine(", N'' AS sAMAccountName																																																																																			");
+strBuil.AppendLine(", N'' AS userPrincipalName																																																																																	");
+strBuil.AppendLine(", N'' AS uSNChanged																																																																																					");
+strBuil.AppendLine(", N'' AS whenChanged																																																																																				");
+strBuil.AppendLine(", N'' AS whenCreated																																																																																				");
+strBuil.AppendLine("																																																																																														");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																																																									");
+strBuil.AppendLine(", E.DeptName AS department																																																																																	");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																																																					");
+strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																																																						");
+strBuil.AppendLine(", F.MinorName AS title --직위																																																																																");
+strBuil.AppendLine(", C.PwdMailAdder AS mail																																																																																		");
+strBuil.AppendLine(", A.EmpID AS sAMAccountName																																																																																	");
+strBuil.AppendLine("FROM _TDAEmpIn AS A WITH(NOLOCK)																																																																														");
+strBuil.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																																	");
+strBuil.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END																");
+strBuil.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END															");
+strBuil.AppendLine("INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.						");
+strBuil.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq                                                                                        					");
+strBuil.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																																															");
+strBuil.AppendLine("-- 직위를 가져오기 위한 조인																																																																																");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																																									");
+strBuil.AppendLine("-- 직급을 가져오기 위한 조인																																																																																");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																																										");
+strBuil.AppendLine("-- 직책을 가져오기 위한 조인  																																																																															");
+strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																																								");
+strBuil.AppendLine("WHERE 1 = 1																																																																																									");
+strBuil.AppendLine("    AND C.UserSeq NOT IN(1)--마스터 제외																																																																										");
+strBuil.AppendLine("    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																																													");
+strBuil.AppendLine("ORDER BY A.EmpID ASC																																																																																				");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+/***********************************************************************  
+설  명 - ID Cente 연동용 뷰 - 사용자 정보  
+작성일 - 2023.02.21  
+작성자 - 김두환  
+비  고  
+  
+select * from yw_VIEW_IDCenter_ORG_PERSON  
+************************************************************************/   
+CREATE View [dbo].[yw_VIEW_IDCenter_ORG_PERSON]  
+AS  
+select   
+  'COM31' ComCode                          -- 회사코드 nvarchar(20)  
+  , a.EmpID PersonCode                       -- 사번 nvarchar(20)  
+  , case when CHARINDEX('@',c.PwdMailAdder) > 1 then substring(c.PwdMailAdder, 1, CHARINDEX('@',c.PwdMailAdder)-1) else '' end PersonId -- 아이디 nvarchar(20)  
+  , convert(nvarchar(20), a.EmpSeq) EmployeeNumber                -- 사용자 일련번호 nvarchar(20)                -- 사용자 이름 nvarchar(50)  
+  , convert(nvarchar(50),   
+   case   
+    when len(trim(d.EmpEngFirstName + d.EmpEngLastName)) > 0 then d.EmpName +'(' + trim(d.EmpEngFirstName + ' '+  d.EmpEngLastName) + ')'   
+    else d.EmpName end  
+  ) AS DisplayName                        -- 사용자 이름 한국어(영어) nvarchar(50)    
+  , convert(nvarchar(50), d.EmpName) DisplayNameKor                -- 사용자 이름 (한국어) nvarchar(50)  
+  , convert(nvarchar(50), trim(d.EmpEngFirstName + ' '+ d.EmpEngLastName)) DisplayNameEng       -- 사용자 이름 (영어) nvarchar(50)  
+  , convert(nvarchar(50), case when d.EmpChnName = 'Y' then '' else d.EmpChnName end) DisplayNameChi    -- 사용자 이름 (중국어) nvarchar(50)  
+  , '' DisplayNameJpn                        -- 사용자 이름 (일본어) nvarchar(50)  
+  , case when a.RetireDate > convert(varchar(8), Getdate(), 112) then 1 else 0 end UsageState      -- 사용여부 bit   
+  , null isCreateAD                        -- AD 생성 대상 여부 bit   
+  , null IsMessenger                        -- 메신저 사용 유무 bit   
+  , null ExternalLicense                       -- Cloude (M365) 외부라이센스 bit   
+  , null OrderEmp                         -- 정렬순서 int   
+  , null SendMailNickName                       -- 사용자 메일발송이름 nvarchar(50  
+  , convert(nvarchar(10), isnull(s1.MinorName, '양력')) BirthType                   -- 생일유형 nvarchar(10)  
+  , substring(a.BirthDate,1,4) + '-' +  substring(a.BirthDate,5,2) + '-' + substring(a.BirthDate,7,2)   BirthDate -- 생일 nvarchar(10)  
+  , convert(nvarchar(10), s2.MinorName) Gender                       -- 성별 nvarchar(10)  
+  , case when a.IsMarriage = '1' then '기혼' else '미혼' end Marry -- 결혼여부 nvarchar(10)  
+  , convert(nvarchar(10), m22.ValueText) Country            -- 국가코드 nvarchar(10)  
+  , '인천광역시' City             -- 시/도 nvarchar(40)  
+  , case when SUBSTRING(g.FullTelNo,1,3)  ='032' then REPLACE(g.FullTelNo, '032-', '+82-32-') else '' end  OfficeTelIntNum         -- 회사 전화번호(국제번호) nvarchar(10  
+  , isnull(g.FullTelNo, '') OfficeTel           -- 회사 전화번호 nvarchar(30)  
+  , '+82-32-578-0485' OfficeFaxIntNum          -- 회사 팩스번호(국제번호) nvarchar(10)  
+  , '032-578-0485' OfficeFax           -- 회사 팩스번호 nvarchar(30)  
+  , '' OfficeExtTel             -- 회사 내선번호 nvarchar(30)  
+  , '22824' OfficeZipCode            -- 회사 우편번호 nvarchar(10)  
+  , '인천광역시 서구 가좌로 84번길 13' OfficeAddress     -- 회사 주소 nvarchar(128)  
+  , '' HomeTelIntNum             -- 집 전화번호(국제번호) nvarchar(10)  
+  , '' HomeTel              -- 집 전화번호 nvarchar(30)  
+  , '' HomeZipCode             -- 집 우편번호 nvarchar(10)  
+  , '' HomeAddress             -- 집 주소 nvarchar(128)  
+  , '' MobileTelIntNum            -- 핸드폰번호(국제번호) nvarchar(10)  
+  , a.Cellphone  MobileTel           -- 핸드폰번호 nvarchar(20)  
+  , c.PwdMailAdder Email            -- 이메일 (내부메일) nvarchar(64)  
+  , c.PwdMailAdder Email2            -- 이메일 (외부메일) nvarchar(64)  
+  , substring(a.EntDate,1,4) + '-' +  substring(a.EntDate,5,2) + '-' + substring(a.EntDate,7,2) EnterDate -- 입사일 nvarchar(10)  
+  , case when a.RetireDate = '99991231' then ''  
+   else substring(a.RetireDate,1,4) + '-' +  substring(a.RetireDate,5,2) + '-' + substring(a.RetireDate,7,2)   
+  end RetireDate -- 퇴사일 nvarchar(10)  
+  , '' EmploymentClass            -- 고용구분 nvarchar(20)  
+  , '' EmploymentType             -- 고용유형 nvarchar(20)  
+  , '' IsFullTime              -- 시간제근무여부 bit   
+    , '' Manager              -- 직속상관 사번 nvarchar(20)  
+  , case   
+   when b2.UMWsSeq = 3001001 then 'A'   --수습(신입)  
+   when b2.UMWsSeq = 3001002 then 'A'   --수습(경력)  
+   when b2.UMWsSeq = 3001003 then 'A'   --재직  
+   when b2.UMWsSeq = 3001005 then 'O'   --휴직(출산)  
+   when b2.UMWsSeq = 3001006 then 'O'   --휴직(업무)  
+   when b2.UMWsSeq = 3001007 then 'O'   --휴직(병가)  
+   when b2.UMWsSeq = 3001008 then '0'   --휴직(개인)  
+   when b2.UMWsSeq = 3001009 then 'T'   --퇴직  
+   when b2.UMWsSeq = 3001010 then 'O'   --휴직  
+   else 'T'  
+  end WorkingState             -- 업무수행상태 char(1) 재직:A, 휴직:O, 퇴직:T  
+  , '' WorkCondition             -- 업무대리자 사번 nvarchar(20)  
+  , '' ReceptionDeptCode            -- 수신부서 부서코드 nvarchar(20)  
+  , '' UserLanguageCode            -- 사용자언어설정코드 nvarchar(4)  
+  , '' PasswordExpireDate            -- 비밀번호 만료기한 nvarchar(10)  
+  , '' SignaturePath             -- 서명경로 nvarchar(128)  
+  , '' PhotoPath              -- 사진경로 nvarchar(128)  
+  , '' Vacation              -- 상세휴가 내용 nvarchar(256)  
+  , convert(nvarchar(20), m3.MinorSeq) GradeCode      -- 직급코드 nvarchar(20)  
+  , convert(nvarchar(20), m4.MinorSeq) JobTitleCode     -- 직위코드 nvarchar(20)  
+  , convert(nvarchar(20), m1.MinorSeq) RoleCode      -- 직책코드 nvarchar(20)  
+  , convert(nvarchar(20), e.JobSeq) JobGroupCode      -- 직무코드 nvarchar(20)  
+  , convert(nvarchar(20), m5.MinorSeq) JobGroupSetCode    -- 직군코드 nvarchar(20)  
+  , convert(nvarchar(50), m3.MinorName) GradeName      -- 직급명 nvarchar(50)  
+  , convert(nvarchar(50), m4.MinorName) JobTitleName     -- 직위명 nvarchar(50)  
+  , convert(nvarchar(50), m1.MinorName) RoleName      -- 직책명 nvarchar(50)  
+  , convert(nvarchar(50), e.JobName) JobGroupName      -- 직무명 nvarchar(50)  
+  , convert(nvarchar(50), m5.MinorName) JobGroupSetName    -- 직군명 nvarchar(50)  
+  , '' Description             -- 담당업무 nvarchar(512)  
+  , isnull(f.mLastDateTime,b.LastDateTime) CreatedDate    -- 생성일자 datetime   
+  , b.LastDateTime ModifiedDate          -- 수정일자 datetime   
+from _TDAEmpIn a with(nolock)   
+  inner join  _THRAdmOrdEmp b with(nolock)  
+   ON a.CompanySeq = b.CompanySeq  
+    AND a.EmpSeq = b.EmpSeq  
+    AND b.OrdDate <= CASE WHEN ISNULL(a.RetireDate,'') > convert(varchar(8), Getdate(), 112) THEN convert(varchar(8), Getdate(), 112)  ELSE a.RetireDate  END  
+    AND b.OrdEndDate >= CASE WHEN ISNULL(a.RetireDate,'') > convert(varchar(8), Getdate(), 112) THEN convert(varchar(8), Getdate(), 112)  ELSE a.RetireDate  END  
+    AND b.IsOrdDateLast = '1'  
+  left join _THRAdmOrd b2 with(nolock) on b.CompanySeq = b2.CompanySeq and b.OrdSeq = b2.OrdSeq  
+  inner join _TCAUser c with(nolock) on a.CompanySeq = c.CompanySeq and a.EmpSeq = c.EmpSeq and c.PwdMailAdder <> ''  
+  inner join _TDAEmp d with(nolock) on a.EmpSeq = d.EmpSeq and a.CompanySeq = d.CompanySeq  
+  left join _THROrgJob e with(nolock) on b.CompanySeq = e.CompanySeq and b.JobSeq = e.JobSeq  
+  left join _TDAUMinor m1 with(nolock) on m1.CompanySeq = b.CompanySeq and b.UMJdSeq = m1.MinorSeq and m1.IsUse = 1  --직책  
+  left join _TDAUMinor m2 with(nolock) on m2.CompanySeq = a.CompanySeq and a.UMNationSeq = m2.MinorSeq  and m2.MajorSeq = 1002 --국가  
+  left join _TDAUMinorValue m22 with(nolock) on m2.CompanySeq = m22.CompanySeq and m2.MinorSeq = m22.MinorSeq and serl = 2011  --국가코드  
+  left join _TDAUMinor m3 with(nolock) on m3.CompanySeq = b.CompanySeq and b.UMPgSeq = m3.MinorSeq and m3.IsUse = 1    --직급  
+  left join _TDAUMinor m4 with(nolock) on m4.CompanySeq = b.CompanySeq and b.UMJpSeq = m4.MinorSeq and m4.IsUse = 1    --직위  
+  left join _TDAUMinor m5 with(nolock) on m5.CompanySeq = e.CompanySeq and e.UMJobClass = m5.MinorSeq and m5.IsUse = 1   --직무분류  
+  left join _TDASMinor s1 with(nolock) on s1.CompanySeq = a.CompanySeq and a.SMBirthType = s1.MinorSeq and s1.MajorSeq = 1009  --생일구분  
+  left join _TDASMinor s2 with(nolock) on s2.CompanySeq = a.CompanySeq and a.SMSexSeq = s2.MinorSeq and s2.MajorSeq = 1010  --성별구분  
+  OUTER apply(  
+   select min(LastDateTime) mLastDateTime  
+   from _THRAdmOrdEmp   
+   where CompanySeq = a.CompanySeq   
+      and EmpSeq = a.EmpSeq  
+  ) f  
+  OUTER apply(  
+   select top 1 g2.FullTelNo  
+   from yw_COTelNoUser g1 with(nolock)  
+    inner join yw_COTelNo g2 with(nolock) on g1.CompanySeq = g2.CompanySeq and g1.TelNoSeq = g2.TelNoSeq  
+   where g1.EmpSeq = a.EmpSeq  
+   order by g1.LastDateTime desc  
+  ) g  
+where c.UserSeq not in (1)  
+  and a.RetireDate >= convert(varchar(8), Getdate(), 112)  
+
+
+
+
+
 
 

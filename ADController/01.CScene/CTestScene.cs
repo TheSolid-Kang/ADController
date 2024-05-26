@@ -18,6 +18,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace ADController._01.CScene
 {
@@ -56,8 +57,8 @@ namespace ADController._01.CScene
             _titles = new List<string>();
             _titles.Add("기능 선택");
             _titles.Add("1. Get AD 사용자 정보");
-            _titles.Add("2. Get DB-HR 사용자 정보");
-            _titles.Add("3. Get DB-NAC 사용자 정보");
+            _titles.Add("2. ");
+            _titles.Add("3. ");
             _titles.Add("4. Get IDCenter 사용자 정보");
             _titles.Add("5. Insert yw_TADUsers_IF ");
             _titles.Add("6. ");
@@ -158,12 +159,6 @@ namespace ADController._01.CScene
         /// <returns></returns>
         protected int Print2()
         {
-            string query = GetHRUserQuery();
-            using (var mgr = new MSSQL_Mgr())
-            {
-                DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
-                Console.WriteLine("확인");
-            }
             return 1;
         }
         /// <summary>
@@ -172,7 +167,6 @@ namespace ADController._01.CScene
         /// <returns></returns>
         protected int Print3()
         {
-            string query = GetHRUserQuery();
             return 1;
         }
         protected int Print4()
@@ -231,7 +225,7 @@ namespace ADController._01.CScene
         {
             //AD사용자동기화조회_yw
             //1. 변수 초기화
-            //가. ERP의 _TADUsers_IF테이블 데이터 가져오기
+            //가. ERP의 yw_TADUsers_IF테이블 데이터 가져오기
             List<yw_TADUsers_IF> list_yw_TADUsers_IF = GetErpAdUsersTbl_IF();
             DataTable yw_TADUsers_IF = ToDataTable<yw_TADUsers_IF>(list_yw_TADUsers_IF);
             //나. 현재 AD정보 가져오기
@@ -250,21 +244,52 @@ namespace ADController._01.CScene
             DataTable INSERT_yw_TADUsers_IF = yw_TADUsers_IF.Clone();
             INSERT_yw_TADUsers_IF.Rows.Clear();
             //      1) AD-NAC 등록   : ERP의 NAC에 등록 된 유저가 AD의 NAC에 없는 경우
+            //      -> AD에 없는 ERP 사용자를 AD-NAC에 등록해야함.
+            List<yw_TADUsers_IF> listErpNacUsers = ConvertDataTableToList<yw_TADUsers_IF>(erpNacUsers);
+            List<yw_TADUsers_IF> listAdNacUsers = ConvertDataTableToList<yw_TADUsers_IF>(adNacUsers);
+            listAdNacUsers.ForEach(AdNacUser => {
+                var yw_TADUsers_IF1 = listErpNacUsers.Find(ErpUser => ErpUser.sAMAccountName == AdNacUser.sAMAccountName);
+                if(yw_TADUsers_IF1 != null)
+                    listErpNacUsers.Remove(yw_TADUsers_IF1);
+            });
 
             //      2) AD-HR 등록    : ERP의 HR에 등록 된 유저가 AD의 HR에 없는 경우
+            //      -> AD에 없는 ERP 사용자를 AD-HR에 등록해야함.
+            List<yw_TADUsers_IF> listErpHrUsers = ConvertDataTableToList<yw_TADUsers_IF>(erpHrUsers);
+            List<yw_TADUsers_IF> listAdHrUsers = ConvertDataTableToList<yw_TADUsers_IF>(adHrUsers);
+            listAdHrUsers.ForEach(AdHrUser => {
+                var yw_TADUsers_IF1 = listErpHrUsers.Find(ErpUser => ErpUser.sAMAccountName == AdHrUser.sAMAccountName);
+                if (yw_TADUsers_IF1 != null)
+                    listErpHrUsers.Remove(yw_TADUsers_IF1);
+            });
+
+            //Insert
+            using(var mgr = new MSSQL_Mgr())
+            {
+                listErpNacUsers.ForEach(data => { mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
+                listErpHrUsers.ForEach(data => { mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
+            }
 
             //  나. DELETE 
             DataTable DELETE_yw_TADUsers_IF = yw_TADUsers_IF.Clone();
             DELETE_yw_TADUsers_IF.Rows.Clear();
+            listErpNacUsers = ConvertDataTableToList<yw_TADUsers_IF>(erpNacUsers);
+            listErpHrUsers = ConvertDataTableToList<yw_TADUsers_IF>(erpHrUsers);
+
             //      3) AD-NAC 비활성 : ERP의 NAC에 없는 유저가 AD의 NAC에 있는 경우
+            //      -> ERP에 없는 AD사용자를 AD-NAC에서 삭제해야함.
 
             //      4) AD-HR 비활성 : ERP의 HR에 없는 유저가 AD의 HR에 있는 경우
+            //      -> ERP에 없는 AD사용자를 AD-HR에서 삭제해야함.
+
 
             //  다. UPDATE
             DataTable UPDATE_yw_TADUsers_IF = yw_TADUsers_IF.Clone();
             UPDATE_yw_TADUsers_IF.Rows.Clear();
             //      1) AD-NAC 수정   : ERP의 NAC에 등록 된 유저가 AD의 NAC에 등록 된 유저의 정보와 다를 경우
+            //      -> ERP의 yw_TADUsers_IF의 데이터도 변경해야함.
             //      2) AD-HR  수정   : ERP의 HR에 등록 된 유저가 AD의 HR에 등록 된 유저의 정보와 다를 경우
+            //      -> ERP의 yw_TADUsers_IF의 데이터도 변경해야함.
 
 
 
@@ -292,109 +317,6 @@ namespace ADController._01.CScene
             StringBuilder strBuil = new StringBuilder();
             strBuil.AppendLine("SELECT * FROM VW_VGMP_IDCENTER");
             return strBuil.ToString();
-        }
-        private string GetNacEmpQuery()
-        {
-            StringBuilder strBuil = new StringBuilder();
-            strBuil.AppendLine("SELECT																																																 ");
-            strBuil.AppendLine("A.EmpID--사번																																													     ");
-            strBuil.AppendLine(", A.EmpSeq--사원내부코드																																											 ");
-            strBuil.AppendLine(", Z.CellPhone--휴대폰번호																																											 ");
-            strBuil.AppendLine(", B.DeptSeq																																														 ");
-            strBuil.AppendLine(", N'' AS PwdMailAdder																																												 ");
-            strBuil.AppendLine(", N'' AS PersonId																																													 ");
-            strBuil.AppendLine(", D.EmpEngFirstName																																												 ");
-            strBuil.AppendLine(", D.EmpEngLastName																																													 ");
-            strBuil.AppendLine(", D.EmpName																																														 ");
-            strBuil.AppendLine(", D.EmpFamilyName --성																																												 ");
-            strBuil.AppendLine(", D.EmpFirstName --이름																																											 ");
-            strBuil.AppendLine("																																																	 ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																															 ");
-            strBuil.AppendLine(", E.DeptName AS department																																											 ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																												 ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																													 ");
-            strBuil.AppendLine(", F.MinorName AS title --직위																																									     ");
-            strBuil.AppendLine(", G.MinorName AS 직급																																											     ");
-            strBuil.AppendLine(", H.MinorName AS 직책																																											     ");
-            strBuil.AppendLine(", N'' AS mail																																														 ");
-            strBuil.AppendLine(", A.EmpID AS sAMAccountName																																										 ");
-            strBuil.AppendLine("FROM _fnAdmEmpOrdRetResidId(1, CONVERT(NCHAR(8), GETDATE(), 112)) AS A																																 ");
-            strBuil.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																										 ");
-            strBuil.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END										 ");
-            strBuil.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END									 ");
-            strBuil.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON B.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																										 ");
-            strBuil.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																		 ");
-            strBuil.AppendLine("-- 직위를 가져오기 위한 조인																																										 ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																							 ");
-            strBuil.AppendLine("-- 직급을 가져오기 위한 조인																																										 ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																							 ");
-            strBuil.AppendLine("-- 직책을 가져오기 위한 조인  																																									  	 ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																						 ");
-            strBuil.AppendLine("																																																	 ");
-            strBuil.AppendLine("																																																	 ");
-            strBuil.AppendLine("INNER JOIN _TDAEmpIn AS Z WITH(NOLOCK) ON B.CompanySeq = Z.CompanySeq AND A.EmpId = Z.EmpId																										 ");
-            strBuil.AppendLine("WHERE 1=1																																															 ");
-            strBuil.AppendLine("	AND OrdName NOT IN(N'')																																											 ");
-            strBuil.AppendLine("	AND RetDate = N''																																												 ");
-            strBuil.AppendLine("	AND A.EmpId NOT IN																																												 ");
-            strBuil.AppendLine("	(																																																 ");
-            strBuil.AppendLine("		SELECT																																														 ");
-            strBuil.AppendLine("		A.EmpID--사번																																												 ");
-            strBuil.AppendLine("		FROM _TDAEmpIn AS A WITH(NOLOCK)																																							 ");
-            strBuil.AppendLine("		INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																	 ");
-            strBuil.AppendLine("		    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
-            strBuil.AppendLine("		    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END								 ");
-            strBuil.AppendLine("		INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.			 ");
-            strBuil.AppendLine("		INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq																									 ");
-            strBuil.AppendLine("		WHERE 1 = 1																																													 ");
-            strBuil.AppendLine("		    AND C.UserSeq NOT IN(1)--마스터 제외																																					 ");
-            strBuil.AppendLine("		    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																							 ");
-            strBuil.AppendLine("	)																																																 ");
-            strBuil.AppendLine("ORDER BY A.EmpID ASC																																												 ");
-            return strBuil.ToString();
-        }
-        private string GetHRUserQuery()
-        {
-            StringBuilder strBuil = new StringBuilder();
-            strBuil.AppendLine("SELECT																																																				  ");
-            strBuil.AppendLine("A.EmpID--사번																																																		  ");
-            strBuil.AppendLine(", A.EmpSeq--사원내부코드																																															  ");
-            strBuil.AppendLine(", A.CellPhone--휴대폰번호																																															  ");
-            strBuil.AppendLine(", B.DeptSeq																																																			  ");
-            strBuil.AppendLine(", C.PwdMailAdder--이메일																																															  ");
-            strBuil.AppendLine(", CASE WHEN CHARINDEX('@', C.PwdMailAdder) > 1 THEN SUBSTRING(C.PwdMailAdder, 1, CHARINDEX('@', C.PwdMailAdder) - 1) ELSE '' END PersonId --아이디 nvarchar(20)													      ");
-            strBuil.AppendLine(", D.EmpEngFirstName																																																	  ");
-            strBuil.AppendLine(", D.EmpEngLastName																																																	  ");
-            strBuil.AppendLine(", D.EmpName																																																			  ");
-            strBuil.AppendLine(", D.EmpFamilyName --성																																																  ");
-            strBuil.AppendLine(", D.EmpFirstName --이름																																																  ");
-            strBuil.AppendLine("																																																					  ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS cn																																			  ");
-            strBuil.AppendLine(", E.DeptName AS department																																															  ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS displayName																																	  ");
-            strBuil.AppendLine(", CONCAT(D.EmpName, N'(', D.EmpEngFirstName, D.EmpEngLastName, N')') AS givenName																																	  ");
-            strBuil.AppendLine(", F.MinorName AS title --직위																																														  ");
-            strBuil.AppendLine(", G.MinorName AS 직급																																																  ");
-            strBuil.AppendLine(", H.MinorName AS 직책																																																  ");
-            strBuil.AppendLine(", C.PwdMailAdder AS mail																																															  ");
-            strBuil.AppendLine(", A.EmpID AS sAMAccountName																																															  ");
-            strBuil.AppendLine("FROM _TDAEmpIn AS A WITH(NOLOCK)																																													  ");
-            strBuil.AppendLine("INNER JOIN _THRAdmOrdEmp AS B WITH(NOLOCK) ON A.CompanySeq = B.CompanySeq AND B.IsOrdDateLast = '1' AND A.EmpSeq = B.EmpSeq																							  ");
-            strBuil.AppendLine("    AND B.OrdDate <= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END														  ");
-            strBuil.AppendLine("    AND B.OrdEndDate >= CASE WHEN ISNULL(A.RetireDate,'') > CONVERT(VARCHAR(8), GETDATE(), 112) THEN CONVERT(VARCHAR(8), GETDATE(), 112)  ELSE A.RetireDate END														  ");
-            strBuil.AppendLine("INNER JOIN _TCAUser AS C WITH(NOLOCK) ON A.CompanySeq = C.CompanySeq AND A.EmpSeq = C.EmpSeq AND C.PwdMailAdder<> ''--PwdMailAdder(이메일)이 NULL이 아니어야 HR 계정이 있는 것임.									  ");
-            strBuil.AppendLine("INNER JOIN _TDAEmp AS D WITH(NOLOCK) ON A.CompanySeq = D.CompanySeq AND A.EmpSeq = D.EmpSeq                                                                                        									  ");
-            strBuil.AppendLine("INNER JOIN _TDADept AS E WITH(NOLOCK) ON B.DeptSeq = E.DeptSeq																																						  ");
-            strBuil.AppendLine("-- 직위를 가져오기 위한 조인																																														  ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS F WITH(NOLOCK) ON (B.CompanySeq = F.CompanySeq AND  B.UMJpSeq = F.MinorSeq) 																											  ");
-            strBuil.AppendLine("-- 직급을 가져오기 위한 조인																																														  ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS G WITH(NOLOCK) ON (B.CompanySeq = G.CompanySeq AND B.UMPgSeq = G.MinorSeq) 																											  ");
-            strBuil.AppendLine("-- 직책을 가져오기 위한 조인  																																														  ");
-            strBuil.AppendLine("LEFT OUTER JOIN _TDAUMinor AS H WITH(NOLOCK) ON (B.CompanySeq = H.CompanySeq AND  B.UMJdSeq    = H.MinorSeq)																										  ");
-            strBuil.AppendLine("WHERE 1 = 1																																																			  ");
-            strBuil.AppendLine("    AND C.UserSeq NOT IN(1)--마스터 제외																																											  ");
-            strBuil.AppendLine("    AND A.RetireDate >= CONVERT(VARCHAR(8), GETDATE(), 112)--현재기준 RetireDate가 없는 사원만 출력																													  ");
-            strBuil.AppendLine("ORDER BY A.EmpID ASC																																																  "); return strBuil.ToString();
         }
         private Dictionary<string, List<Users>> GetMapADUsers()
         {
@@ -453,14 +375,15 @@ namespace ADController._01.CScene
             }
             return yw_TADUsers_IFs;
         }
+
         private DataTable GetErpHrUsers()
         {
             DataTable dataTable = new DataTable();
             using (var mgr = new MSSQL_Mgr())
             {
-                string query = GetHRUserQuery();
-                dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
-            }
+                SqlParameter[] sqlParameters = new[] { new SqlParameter { ParameterName = "@Delimiter", Direction = ParameterDirection.Input, Value = "HR계정" } };
+                dataTable = mgr.GetSPDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "_SADUserErpInfoQuery", sqlParameters);
+            };
             return dataTable;
         }
         private DataTable GetErpNacUsers()
@@ -468,9 +391,10 @@ namespace ADController._01.CScene
             DataTable dataTable = new DataTable();
             using (var mgr = new MSSQL_Mgr())
             {
-                string query = GetNacEmpQuery();
-                dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
-            }
+                SqlParameter[] sqlParameters = new[] { new SqlParameter { ParameterName = "@Delimiter", Direction = ParameterDirection.Input, Value = "NAC계정" } };
+                dataTable = mgr.GetSPDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "_SADUserErpInfoQuery", sqlParameters);
+            };
+
             return dataTable;
         }
         private void SaveErpAdUsersTbl_IF()
@@ -493,26 +417,46 @@ namespace ADController._01.CScene
         public DataTable ToDataTable<T>(List<T>? items)
         {
             var tb = new DataTable(typeof(T).Name);
-
             PropertyInfo[] props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
             foreach (var prop in props)
-            {
                 tb.Columns.Add(prop.Name, prop.PropertyType);
-            }
-
             foreach (var item in items)
             {
                 var values = new object[props.Length];
                 for (var i = 0; i < props.Length; i++)
-                {
                     values[i] = props[i].GetValue(item, null);
-                }
-
                 tb.Rows.Add(values);
             }
-
             return tb;
+        }
+
+        public List<T> ConvertDataTableToList<T>(DataTable _dataTable)
+        {
+            List<T> list = new List<T>(_dataTable.Rows.Count);
+            PropertyInfo[] props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            try
+            {
+
+                foreach (DataRow dataRow in _dataTable.Rows)
+                {
+                    T obj = System.Activator.CreateInstance<T>();
+                    foreach (System.Reflection.PropertyInfo prop in obj.GetType().GetProperties())
+                    {
+                        if (!object.Equals(dataRow[prop.Name], System.DBNull.Value))
+                        {
+                            prop.SetValue(obj, dataRow[prop.Name], null);
+                        }
+                    }
+                    list.Add(obj);
+                }
+            }
+            catch (Exception _e)
+            {
+                System.Diagnostics.Debug.WriteLine(_e.Message);
+            }
+            return list;
         }
         #endregion
     }
