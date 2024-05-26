@@ -9,6 +9,6 @@ namespace ADController
 {
     internal class yw_TADUsers_IF : Users
     {
-      
+        public string condition { get; set; } = "";
     }
 }

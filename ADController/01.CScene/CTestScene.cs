@@ -264,12 +264,13 @@ namespace ADController._01.CScene
             });
 
             //Insert
+            
             using(var mgr = new MSSQL_Mgr())
             {
-                listErpNacUsers.ForEach(data => { mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
-                listErpHrUsers.ForEach(data => { mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
+                listErpNacUsers.ForEach(data => { data.condition = "NAC계정"; mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
+                listErpHrUsers.ForEach(data => { data.condition = "HR계정"; mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
             }
-
+            
             //  나. DELETE 
             DataTable DELETE_yw_TADUsers_IF = yw_TADUsers_IF.Clone();
             DELETE_yw_TADUsers_IF.Rows.Clear();
@@ -282,6 +283,12 @@ namespace ADController._01.CScene
             //      4) AD-HR 비활성 : ERP의 HR에 없는 유저가 AD의 HR에 있는 경우
             //      -> ERP에 없는 AD사용자를 AD-HR에서 삭제해야함.
 
+            //ADView만 고치면 됨...
+            //using (var mgr = new MSSQL_Mgr())
+            //{
+            //    listErpNacUsers.ForEach(data => { mgr.DeleteDataByKey<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data.sAMAccountName); });
+            //    listErpHrUsers.ForEach(data => { mgr.DeleteDataByKey<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data.sAMAccountName); });
+            //}
 
             //  다. UPDATE
             DataTable UPDATE_yw_TADUsers_IF = yw_TADUsers_IF.Clone();
@@ -408,7 +415,7 @@ namespace ADController._01.CScene
                 foreach (var keyPairs in mapADUsers)
                 {
                     List<Users> adUsers = keyPairs.Value;
-                    adUsers.ForEach(adUser => mgr.InsertData<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser));
+                    adUsers.ForEach(adUser => mgr.InsertDataByTableName<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser,"yw_TADUsers_IF"));
                 }
             }
 
@@ -444,6 +451,8 @@ namespace ADController._01.CScene
                     T obj = System.Activator.CreateInstance<T>();
                     foreach (System.Reflection.PropertyInfo prop in obj.GetType().GetProperties())
                     {
+                        if (false == dataRow.Table.Columns.Contains(prop.Name))
+                            continue;
                         if (!object.Equals(dataRow[prop.Name], System.DBNull.Value))
                         {
                             prop.SetValue(obj, dataRow[prop.Name], null);
