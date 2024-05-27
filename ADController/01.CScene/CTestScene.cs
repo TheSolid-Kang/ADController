@@ -57,12 +57,12 @@ namespace ADController._01.CScene
             _titles = new List<string>();
             _titles.Add("기능 선택");
             _titles.Add("1. Get AD 사용자 정보");
-            _titles.Add("2. ");
+            _titles.Add("2. AD정보 ERP에 INSERT, UPDATE, DELETE");
             _titles.Add("3. ");
             _titles.Add("4. Get IDCenter 사용자 정보");
             _titles.Add("5. Insert yw_TADUsers_IF ");
             _titles.Add("6. ");
-            _titles.Add("7. AD사용자동기화조회_yw 화면 개발");
+            _titles.Add("7. 취소_AD사용자동기화조회_yw 화면 개발");
             _titles.Add("8. ");
             _titles.Add("9. ");
             _titles.Add("99.EXIT");
@@ -130,13 +130,13 @@ namespace ADController._01.CScene
             string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
 
-            Dictionary<string, List<Users>> mapADUsers = new Dictionary<string, List<Users>>();
-            mapADUsers.Add("HR계정", new List<Users>());
-            mapADUsers.Add("NAC계정", new List<Users>());
+            Dictionary<string, List<ADUser>> mapADUsers = new Dictionary<string, List<ADUser>>();
+            mapADUsers.Add("HR계정", new List<ADUser>());
+            mapADUsers.Add("NAC계정", new List<ADUser>());
             foreach (var keyPairs in mapADUsers)
             {
                 string key = keyPairs.Key;
-                List<Users> values = keyPairs.Value;
+                List<ADUser> values = keyPairs.Value;
                 ADUsers.ForEach(a =>
                 {
                     if (true == a.distinguishedName.Contains(key))
@@ -159,6 +159,20 @@ namespace ADController._01.CScene
         /// <returns></returns>
         protected int Print2()
         {
+            //나. 현재 AD정보 가져오기
+            Dictionary<string, List<ADUser>> mapADUsers = GetMapADUsers();
+            //  1) AD의 'NAC계정' OU에서 유저 정보 가져오기
+            DataTable adNacUsers = ToDataTable<ADUser>(mapADUsers["NAC계정"]);
+            //  2) AD의 'HR계정' OU에서 유저 정보 가져오기
+            DataTable adHrUsers = ToDataTable<ADUser>(mapADUsers["HR계정"]);
+            //  3) AD의 'Retirement' OU에서 유저 정보 가져오기
+            DataTable adRetirementUsers = ToDataTable<ADUser>(mapADUsers["Retirement"]);
+
+            yw_TADUsers_IF temp = new yw_TADUsers_IF();
+            mapADUsers["NAC계정"].ForEach(a => { temp = new yw_TADUsers_IF(a); });
+
+            Console.WriteLine("123");
+
             return 1;
         }
         /// <summary>
@@ -197,7 +211,7 @@ namespace ADController._01.CScene
 
             //사용자 동기화 1번: 사용자 등록-이동-삭제
             //1. 변수 초기화
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            Dictionary<string, List<ADUser>> mapADUsers = GetMapADUsers();
 
             //2. AD NAC계정 사용자 생성
             //if DB사원명부에 있는 사원이 AD사용자에 없는 경우
@@ -229,11 +243,11 @@ namespace ADController._01.CScene
             List<yw_TADUsers_IF> list_yw_TADUsers_IF = GetErpAdUsersTbl_IF();
             DataTable yw_TADUsers_IF = ToDataTable<yw_TADUsers_IF>(list_yw_TADUsers_IF);
             //나. 현재 AD정보 가져오기
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            Dictionary<string, List<ADUser>> mapADUsers = GetMapADUsers();
             //  1) AD의 NAC계정 유저 정보 가져오기
-            DataTable adNacUsers = ToDataTable<Users>(mapADUsers["NAC계정"]);
+            DataTable adNacUsers = ToDataTable<ADUser>(mapADUsers["NAC계정"]);
             //  2) AD의 HR계정 유저 정보 가져오기
-            DataTable adHrUsers = ToDataTable<Users>(mapADUsers["HR계정"]);
+            DataTable adHrUsers = ToDataTable<ADUser>(mapADUsers["HR계정"]);
             //다. ERP의 NAC 유저 정보 가져오기
             DataTable erpNacUsers = GetErpNacUsers();
             //라. ERP의 HR 유저 정보 가져오기
@@ -264,7 +278,6 @@ namespace ADController._01.CScene
             });
 
             //Insert
-            
             using(var mgr = new MSSQL_Mgr())
             {
                 listErpNacUsers.ForEach(data => { data.condition = "NAC계정"; mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
@@ -278,10 +291,10 @@ namespace ADController._01.CScene
             listErpHrUsers = ConvertDataTableToList<yw_TADUsers_IF>(erpHrUsers);
 
             //      3) AD-NAC 비활성 : ERP의 NAC에 없는 유저가 AD의 NAC에 있는 경우
-            //      -> ERP에 없는 AD사용자를 AD-NAC에서 삭제해야함.
+            //      -> ERP에 없는 AD사용자를 AD-NAC에서 비활성화 처리해야함.
 
             //      4) AD-HR 비활성 : ERP의 HR에 없는 유저가 AD의 HR에 있는 경우
-            //      -> ERP에 없는 AD사용자를 AD-HR에서 삭제해야함.
+            //      -> ERP에 없는 AD사용자를 AD-HR에서 비활성화 처리해야함.
 
             //ADView만 고치면 됨...
             //using (var mgr = new MSSQL_Mgr())
@@ -298,10 +311,7 @@ namespace ADController._01.CScene
             //      2) AD-HR  수정   : ERP의 HR에 등록 된 유저가 AD의 HR에 등록 된 유저의 정보와 다를 경우
             //      -> ERP의 yw_TADUsers_IF의 데이터도 변경해야함.
 
-
-
             //3. 
-
 
             return 1;
         }
@@ -325,12 +335,12 @@ namespace ADController._01.CScene
             strBuil.AppendLine("SELECT * FROM VW_VGMP_IDCENTER");
             return strBuil.ToString();
         }
-        private Dictionary<string, List<Users>> GetMapADUsers()
+        private Dictionary<string, List<ADUser>> GetMapADUsers()
         {
-            List<string> keyOUs = new List<string>() { "HR계정", "NAC계정" };
+            List<string> keyOUs = new List<string>() { "HR계정", "NAC계정", "Retirement" };
             return GetMapADUsers(keyOUs);
         }
-        private Dictionary<string, List<Users>> GetMapADUsers(List<string> _keyOUs)
+        private Dictionary<string, List<ADUser>> GetMapADUsers(List<string> _keyOUs)
         {
             //1. Config 파일에서 LDAP 등록 정보 가져오기
             string path = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
@@ -341,14 +351,14 @@ namespace ADController._01.CScene
 
             //2. AD에서 AD사용자 조회
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
-            Dictionary<string, List<Users>> mapADUsers = new Dictionary<string, List<Users>>();
-            _keyOUs.ForEach(a => mapADUsers.Add(a, new List<Users>()));
+            Dictionary<string, List<ADUser>> mapADUsers = new Dictionary<string, List<ADUser>>();
+            _keyOUs.ForEach(a => mapADUsers.Add(a, new List<ADUser>()));
 
             //3. Map에 지정 된 OU별로 AD사용자 등록
             foreach (var keyPairs in mapADUsers)
             {
                 string key = keyPairs.Key;
-                List<Users> values = keyPairs.Value;
+                List<ADUser> values = keyPairs.Value;
                 ADUsers.ForEach(a =>
                 {
                     if (true == a.distinguishedName.Contains(key))
@@ -407,15 +417,15 @@ namespace ADController._01.CScene
         private void SaveErpAdUsersTbl_IF()
         {
             //1. 변수 초기화
-            Dictionary<string, List<Users>> mapADUsers = GetMapADUsers();
+            Dictionary<string, List<ADUser>> mapADUsers = GetMapADUsers();
 
             //2. Insert Query
             using (var mgr = new MSSQL_Mgr())
             {
                 foreach (var keyPairs in mapADUsers)
                 {
-                    List<Users> adUsers = keyPairs.Value;
-                    adUsers.ForEach(adUser => mgr.InsertDataByTableName<Users>(DbMgr.DB_CONNECTION.YWDEV, adUser,"yw_TADUsers_IF"));
+                    List<ADUser> adUsers = keyPairs.Value;
+                    adUsers.ForEach(adUser => mgr.InsertDataByTableName<ADUser>(DbMgr.DB_CONNECTION.YWDEV, adUser,"yw_TADUsers_IF"));
                 }
             }
 
