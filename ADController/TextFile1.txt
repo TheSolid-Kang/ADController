@@ -418,3 +418,24 @@ where c.UserSeq not in (1) 
 
 
 
+x.cn 					 == y.
+&& x.description 		 == y.
+&& x.department 		 == y.
+&& x.displayName 		 == y.
+&& x.distinguishedName 	 == y.
+&& x.givenName 			 == y.
+&& x.homePhone 			 == y.
+&& x.lastLogon			 == y.
+&& x.otherHomePhone		 == y.
+&& x.otherMobile		 == y.
+&& x.pwdLastSet			 == y.
+&& x.sn					 == y.
+&& x.title				 == y.
+&& x.mail 				 == y.
+&& x.manager			 == y.
+&& x.sAMAccountName 	 == y.
+&& x.userPrincipalName 	 == y.
+&& x.uSNChanged 		 == y.
+&& x.uSNCreated			 == y.
+&& x.whenChanged 		 == y.
+&& x.whenCreated 		 == y.

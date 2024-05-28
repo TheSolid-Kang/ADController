@@ -37,6 +37,23 @@ namespace ADController
         }
 
         public string condition { get; set; } = "";
-
+        public string OU
+        {
+            get
+            {
+                if (true == string.IsNullOrEmpty(this.distinguishedName))
+                    return "";
+                var str = this.distinguishedName;
+                int fromIdx = str.IndexOf("OU=");
+                if (fromIdx == -1)
+                    return "";
+                str = str.Substring(fromIdx + 3, str.Length - fromIdx - 3);//문자열에서 "OU="를 제외: OU=HR계정 -> HR계정
+                int toIdx = str.IndexOf(",");
+                str = str.Substring(0, toIdx);
+                return str;
+            }
+            set { }
+        }
+        
     }
 }
