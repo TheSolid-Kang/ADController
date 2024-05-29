@@ -439,3 +439,32 @@ x.cn 					 == y.
 && x.uSNCreated			 == y.
 && x.whenChanged 		 == y.
 && x.whenCreated 		 == y.
+
+
+
+
+안녕하세요!
+차장님 AD프로그램 중 'ERP(yw_TADUsers_IF 테이블) 최신화' 기능 로직 설명 및 이후 개발 예정 공유드립니다!
+
+* 로직 설명 
+가. INSERT: AD에 있으나 ERP(yw_TADUsers_IF 테이블)에 없는 경우 -> ERP(yw_TADUsers_IF 테이블)에 AD 사용자 정보 등록
+  1) AD컨테이너, ERP컨테이너 비교
+  2) AD컨테이너에서 ERP컨테이너에 있는 사용자 삭제
+  3) INSERT: AD컨테이너 -> ERP(yw_TADUsers_IF 테이블) 
+나. DELETE: ERP(yw_TADUsers_IF 테이블)에 있으나 AD에 없는 경우 -> ERP(yw_TADUsers_IF 테이블)에서 해당 데이터 삭제
+  1) AD컨테이너, ERP컨테이너 비교
+  2) ERP컨테이너에서 AD컨테이너에 있는 사용자 삭제
+  3) DELETE: ERP(yw_TADUsers_IF 테이블)에서 ERP컨테이너 삭제
+다. UPDATE: ERP(yw_TADUsers_IF 테이블)의 ROW가 AD사용자 정보와 다른 경우 -> 최신 AD사용자 정보로 ERP(yw_TADUsers_IF 테이블) 업데이트
+  1) AD컨테이너, ERP컨테이너 재생성
+  2) AD컨테이너, ERP컨테이너 uSNCreated로 ASC 정렬
+  3) AD컨테이너, ERP컨테이너 비교
+  4) UPDATE컨테이너 생성
+  5) AD컨테이너 중 ERP컨테이너와 다른 행이 있는 경우 UPDATE컨테이너에 ADD
+  6) UPDATE: UPDATE컨테이너로 ERP(yw_TADUsers_IF 테이블) 업데이트
+
+
+* 이후 ERP 개발 : yw_TADUsers_IF 테이블과 기존 직원 정보를 JOIN하여 조회 화면(AD-HR계정 등록, AD-NAC계정 등록, 비활성화, AD정보수정) 개발
+
+
+

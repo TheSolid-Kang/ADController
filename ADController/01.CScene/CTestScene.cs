@@ -1,9 +1,11 @@
-﻿using Engine._01.DBMgr;
+﻿using ADController._99._Default;
+using Engine._01.DBMgr;
 using Engine._03.CFTPMgr;
 using Engine._08.CFileMgr;
 using Engine._10.CActiveDirectoryMgr;
 using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
+using MySqlX.XDevAPI.Relational;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Ocsp;
 using Renci.SshNet.Sftp;
@@ -125,9 +127,9 @@ namespace ADController._01.CScene
         protected int Print1()
         {
             //string path = "LDAP://10.225.88.70";
-            string path = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
-            string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
-            string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
+            string path = AppConfig.LDAP_URL;
+            string username = AppConfig.LDAP_ID;
+            string password = AppConfig.LDAP_PWD;
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
 
             Dictionary<string, List<ADUser>> mapADUsers = new Dictionary<string, List<ADUser>>();
@@ -154,7 +156,22 @@ namespace ADController._01.CScene
             return 1;
         }
         /// <summary>
-        /// 2. Get DB-HR 사용자 정보
+        /// 2. AD정보 ERP에 INSERT, UPDATE, DELETE
+        /// 가. INSERT: AD에 있으나 ERP(yw_TADUsers_IF 테이블)에 없는 경우 -> ERP(yw_TADUsers_IF 테이블)에 AD 사용자 정보 등록
+        ///  1) AD컨테이너, ERP컨테이너 비교
+        ///  2) AD컨테이너에서 ERP컨테이너에 있는 사용자 삭제
+        ///  3) INSERT: AD컨테이너 -> ERP(yw_TADUsers_IF 테이블)
+        /// 나.DELETE: ERP(yw_TADUsers_IF 테이블)에 있으나 AD에 없는 경우 -> ERP(yw_TADUsers_IF 테이블)에서 해당 데이터 삭제
+        ///  1) AD컨테이너, ERP컨테이너 비교
+        ///  2) ERP컨테이너에서 AD컨테이너에 있는 사용자 삭제
+        ///  3) DELETE: ERP(yw_TADUsers_IF 테이블)에서 ERP컨테이너 삭제
+        /// 다.UPDATE: ERP(yw_TADUsers_IF 테이블) 의 ROW가 AD사용자 정보와 다른 경우 -> 최신 AD사용자 정보로 ERP(yw_TADUsers_IF 테이블) 업데이트
+        ///  1) AD컨테이너, ERP컨테이너 재생성
+        ///  2) AD컨테이너, ERP컨테이너 uSNCreated로 ASC 정렬
+        ///  3) AD컨테이너, ERP컨테이너 비교
+        ///  4) UPDATE컨테이너 생성
+        ///  5) AD컨테이너 중 ERP컨테이너와 다른 행이 있는 경우 UPDATE컨테이너에 ADD
+        ///  6) UPDATE: UPDATE컨테이너로 ERP(yw_TADUsers_IF 테이블) 업데이트
         /// </summary>
         /// <returns></returns>
         protected int Print2()
@@ -166,12 +183,13 @@ namespace ADController._01.CScene
             adUsers.ForEach(adUser => adYw_TADUsers_IFs.Add(new(adUser)));
             adYw_TADUsers_IFs.RemoveAll(yw_TADUsers_IF => yw_TADUsers_IF.OU.Equals(""));
             adYw_TADUsers_IFs.RemoveAll(yw_TADUsers_IF => yw_TADUsers_IF.OU.Equals("Retirement"));
+            adUsers = null;
 
             //  나. 현재 ERP의 yw_TADUsers_IF의 AD 사용자 목록 컨테이너 생성
             List<yw_TADUsers_IF> erpYw_TADUsers_IFs = new();
             using (var mgr = new MSSQL_Mgr())
             {
-                DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "SELECT * FROM yw_TADUsers_IF");
+                DataTable dataTable = mgr.GetDataTable(AppConfig.DB_URL, "SELECT * FROM yw_TADUsers_IF WHERE IsUse = 1");
                 erpYw_TADUsers_IFs = ConvertDataTableToList<yw_TADUsers_IF>(dataTable);
             }
 
@@ -186,15 +204,16 @@ namespace ADController._01.CScene
                         insertYw_TADUsers_IFs.Remove(yw_TADUsers_IF1);
                 });
                 using (var mgr = new MSSQL_Mgr())
-                    insertYw_TADUsers_IFs.ForEach(insertYw_TADUsers_IF => mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, insertYw_TADUsers_IF));
+                    insertYw_TADUsers_IFs.ForEach(insertYw_TADUsers_IF => mgr.InsertData<yw_TADUsers_IF>(AppConfig.DB_URL, insertYw_TADUsers_IF));
             }
             //  나. DELETE: ERP(yw_TADUsers_IF 테이블)에 있으나 AD에 없는 경우 -> ERP(yw_TADUsers_IF 테이블)에서 해당 데이터 삭제
             {
                 List<yw_TADUsers_IF> deleteYw_TADUsers_IFs = erpYw_TADUsers_IFs.ToList();
                 adYw_TADUsers_IFs.ForEach(yw_TADUsers_IF => deleteYw_TADUsers_IFs.RemoveAll(deleteYw_TADUsers_IF => deleteYw_TADUsers_IF.uSNCreated == yw_TADUsers_IF.uSNCreated));
-                    
+                deleteYw_TADUsers_IFs.ForEach(deleteYw_TADUsers_IF => deleteYw_TADUsers_IF.isUse = "0");
                 using (var mgr = new MSSQL_Mgr())
-                    deleteYw_TADUsers_IFs.ForEach(deleteYw_TADUsers_IF => mgr.DeleteDataByKey<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, deleteYw_TADUsers_IF.sAMAccountName));
+                    //deleteYw_TADUsers_IFs.ForEach(deleteYw_TADUsers_IF => mgr.DeleteDataByKey<yw_TADUsers_IF>(AppConfig.DB_URL, deleteYw_TADUsers_IF.sAMAccountName));
+                    deleteYw_TADUsers_IFs.ForEach(updateYw_TADUsers_IF => mgr.UpdateData<yw_TADUsers_IF>(AppConfig.DB_URL, updateYw_TADUsers_IF, "uSNCreated"));
             }
             //  다. UPDATE: ERP(yw_TADUsers_IF 테이블)의 ROW가 AD사용자 정보와 다른 경우 -> 최신 AD사용자 정보로 ERP(yw_TADUsers_IF 테이블) 업데이트
             {
@@ -204,12 +223,13 @@ namespace ADController._01.CScene
                 adUsers.ForEach(adUser => adYw_TADUsers_IFs.Add(new(adUser)));
                 adYw_TADUsers_IFs.RemoveAll(yw_TADUsers_IF => yw_TADUsers_IF.OU.Equals(""));
                 adYw_TADUsers_IFs.RemoveAll(yw_TADUsers_IF => yw_TADUsers_IF.OU.Equals("Retirement"));
+                adUsers = null;
 
                 //2) 현재 ERP의 yw_TADUsers_IF의 AD 사용자 목록 컨테이너 재생성
                 erpYw_TADUsers_IFs = new();
                 using (var mgr = new MSSQL_Mgr())
                 {
-                    DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "SELECT * FROM yw_TADUsers_IF");
+                    DataTable dataTable = mgr.GetDataTable(AppConfig.DB_URL, "SELECT * FROM yw_TADUsers_IF WHERE isUse = 1");
                     erpYw_TADUsers_IFs = ConvertDataTableToList<yw_TADUsers_IF>(dataTable);
                 }
 
@@ -219,15 +239,15 @@ namespace ADController._01.CScene
                 erpYw_TADUsers_IFs.Sort((a1, a2) => a1.uSNCreated.CompareTo(a2.uSNCreated));
 
                 ADUserComparer aDUserComparer = new ADUserComparer();
-                
-                for(int i = 0; i < adYw_TADUsers_IFs.Count; ++i)
+
+                for (int i = 0; i < adYw_TADUsers_IFs.Count; ++i)
                 {
-                    if(adYw_TADUsers_IFs[i].uSNCreated == erpYw_TADUsers_IFs[i].uSNCreated)
+                    if (adYw_TADUsers_IFs[i].uSNCreated == erpYw_TADUsers_IFs[i].uSNCreated)
                         if (false == aDUserComparer.Equals(adYw_TADUsers_IFs[i], erpYw_TADUsers_IFs[i]))
                             updateYw_TADUsers_IFs.Add(adYw_TADUsers_IFs[i]);
                 }
                 using (var mgr = new MSSQL_Mgr())
-                    updateYw_TADUsers_IFs.ForEach(updateYw_TADUsers_IF => mgr.UpdateData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, updateYw_TADUsers_IF, "uSNCreated"));
+                    updateYw_TADUsers_IFs.ForEach(updateYw_TADUsers_IF => mgr.UpdateData<yw_TADUsers_IF>(AppConfig.DB_URL, updateYw_TADUsers_IF, "uSNCreated"));
             }
 
 
@@ -340,8 +360,8 @@ namespace ADController._01.CScene
             //Insert
             using (var mgr = new MSSQL_Mgr())
             {
-                listErpNacUsers.ForEach(data => { data.condition = "AD NAC계정"; mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
-                listErpHrUsers.ForEach(data => { data.condition = "AD HR계정"; mgr.InsertData<yw_TADUsers_IF>(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, data); });
+                listErpNacUsers.ForEach(data => { data.condition = "AD NAC계정"; mgr.InsertData<yw_TADUsers_IF>(AppConfig.DB_URL, data); });
+                listErpHrUsers.ForEach(data => { data.condition = "AD HR계정"; mgr.InsertData<yw_TADUsers_IF>(AppConfig.DB_URL, data); });
             }
 
             //  나. DELETE 
@@ -398,9 +418,9 @@ namespace ADController._01.CScene
         public List<ADUser> GetADUsers()
         {
             //1. Config 파일에서 LDAP 등록 정보 가져오기
-            string path = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
-            string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
-            string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
+            string path = AppConfig.LDAP_URL;
+            string username = AppConfig.LDAP_ID;
+            string password = AppConfig.LDAP_PWD;
             //2. AD에서 AD사용자 조회
             var ADUsers = CActiveDirectoryMgr.GetInstance().GetADUsers(path, username, password);
             return ADUsers;
@@ -413,9 +433,9 @@ namespace ADController._01.CScene
         private Dictionary<string, List<ADUser>> GetMapADUsers(List<string> _keyOUs)
         {
             //1. Config 파일에서 LDAP 등록 정보 가져오기
-            string path = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
-            string username = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
-            string password = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
+            string path = AppConfig.LDAP_URL;
+            string username = AppConfig.LDAP_ID;
+            string password = AppConfig.LDAP_PWD;
 
             //var dataTable = CActiveDirectoryMgr.GetInstance().GetDataTable<Users>(path, username, password);
 
@@ -445,7 +465,7 @@ namespace ADController._01.CScene
             using (var mgr = new MSSQL_Mgr())
             {
                 string query = "SELECT * FROM yw_TADUsers_IF";
-                DataTable dataTable = mgr.GetDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, query);
+                DataTable dataTable = mgr.GetDataTable(AppConfig.DB_URL, query);
                 yw_TADUsers_IFs = new List<yw_TADUsers_IF>(dataTable.Rows.Count);
                 foreach (DataRow dataRow in dataTable.Rows)
                 {
@@ -469,7 +489,7 @@ namespace ADController._01.CScene
             using (var mgr = new MSSQL_Mgr())
             {
                 SqlParameter[] sqlParameters = new[] { new SqlParameter { ParameterName = "@OU", Direction = ParameterDirection.Input, Value = "HR계정" } };
-                dataTable = mgr.GetSPDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "_SADUserErpInfoQuery", sqlParameters);
+                dataTable = mgr.GetSPDataTable(AppConfig.DB_URL, "_SADUserErpInfoQuery", sqlParameters);
             };
             return dataTable;
         }
@@ -479,7 +499,7 @@ namespace ADController._01.CScene
             using (var mgr = new MSSQL_Mgr())
             {
                 SqlParameter[] sqlParameters = new[] { new SqlParameter { ParameterName = "@OU", Direction = ParameterDirection.Input, Value = "NAC계정" } };
-                dataTable = mgr.GetSPDataTable(ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString, "_SADUserErpInfoQuery", sqlParameters);
+                dataTable = mgr.GetSPDataTable(AppConfig.DB_URL, "_SADUserErpInfoQuery", sqlParameters);
             };
 
             return dataTable;

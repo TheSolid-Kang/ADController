@@ -54,6 +54,7 @@ namespace ADController
             }
             set { }
         }
-        
+        public string isUse { get; set; } = "1";
+        public DateTime lastDateTime { get; set; } = DateTime.Now;
     }
 }
