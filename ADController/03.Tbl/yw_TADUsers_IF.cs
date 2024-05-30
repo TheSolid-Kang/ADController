@@ -1,8 +1,10 @@
 ﻿using Engine._10.CActiveDirectoryMgr;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,6 +30,7 @@ namespace ADController
             this.title = _adUser.title;
             this.mail = _adUser.mail;
             this.manager = _adUser.manager;
+            this.mobile = _adUser.mobile;
             this.sAMAccountName = _adUser.sAMAccountName;
             this.userPrincipalName = _adUser.userPrincipalName;
             this.uSNChanged = _adUser.uSNChanged;
@@ -36,7 +39,6 @@ namespace ADController
             this.whenCreated = _adUser.whenCreated;
         }
 
-        public string condition { get; set; } = "";
         public string OU
         {
             get
@@ -44,17 +46,30 @@ namespace ADController
                 if (true == string.IsNullOrEmpty(this.distinguishedName))
                     return "";
                 var str = this.distinguishedName;
-                int fromIdx = str.IndexOf("OU=");
+                int fromIdx = str.IndexOf(",OU=");
                 if (fromIdx == -1)
                     return "";
-                str = str.Substring(fromIdx + 3, str.Length - fromIdx - 3);//문자열에서 "OU="를 제외: OU=HR계정 -> HR계정
-                int toIdx = str.IndexOf(",");
-                str = str.Substring(0, toIdx);
+                str = str.Substring(fromIdx + 1);//문자열에서 ",OU="를 제외: ,OU=HR계정... -> OU=HR계정...
                 return str;
             }
             set { }
         }
-        public string isUse { get; set; } = "1";
-        public DateTime lastDateTime { get; set; } = DateTime.Now;
+        public string isDeleted { get; set; } = "0";
+        public DateTime lastSyncDateTime { get; set; } = DateTime.Now;
+    }
+
+    public class yw_TADUsers_IFComparer : ADUserComparer
+    {
+        public bool Equals(ADUser x, ADUser y)
+        {
+            ADUserComparer aDUserComparer = new ADUserComparer();
+            bool isTrue = aDUserComparer.Equals(x, y);
+
+            yw_TADUsers_IF xx = (yw_TADUsers_IF)x;
+            yw_TADUsers_IF yy = (yw_TADUsers_IF)y;
+
+            return isTrue
+                    && xx.OU == yy.OU;
+        }
     }
 }
