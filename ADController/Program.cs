@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using ADController._01.CScene;
 using ADController._97.DesignPattern;
 using Engine;
 using Engine._10.CActiveDirectoryMgr;
@@ -6,6 +7,7 @@ using Engine._10.CActiveDirectoryMgr;
 Console.WriteLine("Hello, World!");
 
 var mgrInstance = CSceneMgr.GetInstance();
+#if DEBUG
 int num = 0;
 do
 {
@@ -25,4 +27,7 @@ void PrintTitle()
     titles.Add("99.EXIT");
     titles.ForEach(x => { Console.WriteLine(x); });
 }
+#else
+((CTestScene)mgrInstance.GetScene()).Update(2); //Print2() 실행
+#endif
 
