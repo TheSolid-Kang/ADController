@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ADController._01.CScene
+namespace ADController._01.CSyncModel
 {
-    internal interface IScene : IDisposable
+    internal interface ISyncModel : IDisposable
     {
         protected void Initialize();
         protected void InitFunc();
@@ -16,9 +16,9 @@ namespace ADController._01.CScene
         protected int Update(int _event = 0);
     }
 
-    internal class CScene : IScene
+    internal class CSyncModel : ISyncModel
     {
-        public CScene() { }
+        public CSyncModel() { }
 
 
         #region 멤버변수
@@ -47,9 +47,6 @@ namespace ADController._01.CScene
 
         public virtual void Render()
         {
-            Console.WriteLine("아무 키나 눌러주세요.");
-            Console.ReadKey();
-            Console.Clear();
             //throw new NotImplementedException();
         }
 
@@ -62,13 +59,10 @@ namespace ADController._01.CScene
         #region 내장 멤버함수
         public int Excute(int _num = 0)
         {
-            this.Render();
-
             Initialize();
             Render();
-            int num = CIO.AskAndReturnInteger();
-            int result = Update(num);
-            Console.Clear();
+            int result = Update();
+
 
             return result;
         }

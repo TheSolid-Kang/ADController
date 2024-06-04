@@ -1,4 +1,5 @@
 ﻿using ADController._99._Default;
+using Engine;
 using Engine._01.DBMgr;
 using Engine._10.CActiveDirectoryMgr;
 using System;
@@ -14,11 +15,11 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ADController._01.CScene
+namespace ADController._01.CSyncModel
 {
-    internal class CTestScene : CScene
+    internal class CTestSyncModel : CSyncModel
     {
-        public CTestScene()
+        public CTestSyncModel()
         {
 
         }
@@ -47,7 +48,9 @@ namespace ADController._01.CScene
 
         public override void Render()
         {
-            base.Render();
+            Console.WriteLine("아무 키나 눌러주세요.");
+            Console.ReadKey();
+            Console.Clear();
             _titles = new List<string>();
             _titles.Add("기능 선택");
             _titles.Add("1. Get AD 사용자 정보");
@@ -65,6 +68,8 @@ namespace ADController._01.CScene
 
         public override int Update(int _event = 0)
         {
+            _event = CIO.AskAndReturnInteger();
+
             base.Update(_event);
             int result = 0;
             switch (_event)
@@ -108,6 +113,9 @@ namespace ADController._01.CScene
                     result = Update();
                     break;
             }
+            Console.WriteLine("아무 키나 눌러주세요.");
+            Console.ReadKey();
+            Console.Clear();
             return result;
         }
         #endregion 
@@ -166,7 +174,7 @@ namespace ADController._01.CScene
         ///  6) UPDATE: UPDATE컨테이너로 ERP(yw_TADUsers_IF 테이블) 업데이트
         /// </summary>
         /// <returns></returns>
-        protected int Print2()
+        public int Print2()
         {
             //1. AD 사용자 컨테이너, ERP 사용자 컨테이너 생성
             //  가. 현재 AD 사용자 목록 컨테이너 생성 
@@ -247,12 +255,7 @@ namespace ADController._01.CScene
         }
         protected int Print4()
         {
-            string query = GetIDCnterUserQuery();
-            using (var mgr = new MSSQL_Mgr())
-            {
-                DataTable dataTable = mgr.GetDataTable(DbMgr.DB_CONNECTION.YQMS, query);
-                Console.WriteLine("확인");
-            }
+
             return 1;
         }
         /// <summary>
@@ -502,7 +505,7 @@ namespace ADController._01.CScene
                     List<yw_TADUsers_IF> adYw_TADUsers_IFs = new(adUsers.Count);
                     adUsers.ForEach(adUser => adYw_TADUsers_IFs.Add(new(adUser)));
 
-                    adYw_TADUsers_IFs.ForEach(adUser => mgr.InsertDataByTableName<yw_TADUsers_IF>(DbMgr.DB_CONNECTION.YWDEV, adUser, "yw_TADUsers_IF"));
+                    adYw_TADUsers_IFs.ForEach(adUser => mgr.InsertDataByTableName<yw_TADUsers_IF>(AppConfig.DB_URL, adUser, "yw_TADUsers_IF"));
                 }
             }
 

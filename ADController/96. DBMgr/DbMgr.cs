@@ -11,22 +11,6 @@ namespace Engine._01.DBMgr
 {
     public class DbMgr
     {
-        public enum DB_CONNECTION
-        {
-            HOME = 0
-            , ERP
-            , ERP_DEV
-            , MES1
-            , MATERIAL
-            , TWO_MITES
-            , CALEB
-            , GW
-            , YW
-            , YWDEV
-            , YQMS
-            , END
-        }
-
         public List<T> SelectList<T>(string _url, string _query)
         {
             List<T> list = null;
@@ -49,13 +33,6 @@ namespace Engine._01.DBMgr
 
             return list;
         }
-
-        public List<T> SelectList<T>(DB_CONNECTION _CON, string _query)
-        {
-            string url = ConfigurationManager.ConnectionStrings[Enum.GetName(_CON)].ConnectionString;
-            return SelectList<T>(url, _query);
-        }
-
 
         private List<T> DataReaderMapToList<T>(IDataReader dr)
         {
