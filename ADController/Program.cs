@@ -29,14 +29,3 @@ int i = (int)CSyncModuleMgr.SYNC_MODEL.AD_USER;
 while ((int)CSyncModuleMgr.SYNC_MODEL.TEST < i && (int)CSyncModuleMgr.SYNC_MODEL.END > i)
     mgrInstance.Excute(i++);
 #endif
-
-/*
- * 두환 차장님 조건
-1. 용어 변경
-    가. 동기화 객체명 변경: SyncModule -> SyncModule
-2. 사용하지 않아도 되는 함수 삭제
-    가. CSyncModule 클래스 내의 옵저버 패턴 관련 default함수 삭제
-        1) protected void InitFunc();
-        2) protected void InitPracticeFunc();
-    나. CObj 클래스 사용하지 않으므로 삭제
- */

@@ -52,6 +52,7 @@ namespace ADController
                 str = str.Substring(fromIdx + 1);//문자열에서 ",OU="를 제외: ,OU=HR계정... -> OU=HR계정...
                 return str;
             }
+            set { }
         }
         public string isDeleted { get; set; } = "0";
         public DateTime lastSyncDateTime { get; set; } = DateTime.Now;
