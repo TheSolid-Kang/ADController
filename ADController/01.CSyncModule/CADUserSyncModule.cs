@@ -9,11 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ADController._01.CSyncModel
+namespace ADController._01.CSyncModule
 {
-    internal class CADUserSyncModel : CSyncModel
+    internal class CADUserSyncModule : CSyncModule
     {
-        public CADUserSyncModel() { }
+        public CADUserSyncModule() { }
         #region 멤버변수
         #endregion
         #region 디폴트 함수
@@ -22,29 +22,19 @@ namespace ADController._01.CSyncModel
             base.Dispose();
         }
 
-        public override void InitFunc()
-        {
-            base.InitFunc();
-        }
-
         public override void Initialize()
         {
             base.Initialize();
-        }
-
-        public override void InitPracticeFunc()
-        {
-            base.InitPracticeFunc();
-        }
-
-        public override void Render()
-        {
-            base.Render();
             _titles = new List<string>();
             _titles.Add("기능 실행: AD 사용자 정보 동기화");
             _titles.Add("1. AD정보 ERP에 INSERT, UPDATE, DELETE(UPDATE)");
             _titles.Add("2. ");
             _titles.Add("3. ");
+        }
+
+        public override void Render()
+        {
+            base.Render();
             _titles.ForEach(x => { Console.WriteLine(x); });
         }
 
@@ -94,6 +84,7 @@ namespace ADController._01.CSyncModel
             {
                 DataTable dataTable = mgr.GetDataTable(AppConfig.DB_URL, "SELECT * FROM yw_TADUsers_IF");
                 erpYw_TADUsers_IFs = DataTableMgr.ConvertDataTableToList<yw_TADUsers_IF>(dataTable);
+                dataTable.Dispose();
             }
 
             //2. _TADUsers_IF 테이블에 데이터 INSERT, DELETE, UPDATE 쿼리 작성
@@ -130,6 +121,7 @@ namespace ADController._01.CSyncModel
                 {
                     DataTable dataTable = mgr.GetDataTable(AppConfig.DB_URL, "SELECT * FROM yw_TADUsers_IF");
                     erpYw_TADUsers_IFs = DataTableMgr.ConvertDataTableToList<yw_TADUsers_IF>(dataTable);
+                    dataTable.Dispose();
                 }
 
                 //3) 최신 AD사용자 정보로 ERP의 yw_TADUsers_IF 업데이트

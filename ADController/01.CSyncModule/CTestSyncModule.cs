@@ -15,11 +15,11 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ADController._01.CSyncModel
+namespace ADController._01.CSyncModule
 {
-    internal class CTestSyncModel : CSyncModel
+    internal class CTestSyncModule : CSyncModule
     {
-        public CTestSyncModel()
+        public CTestSyncModule()
         {
 
         }
@@ -31,26 +31,9 @@ namespace ADController._01.CSyncModel
             base.Dispose();
         }
 
-        public override void InitFunc()
-        {
-            base.InitFunc();
-        }
-
         public override void Initialize()
         {
             base.Initialize();
-        }
-
-        public override void InitPracticeFunc()
-        {
-            base.InitPracticeFunc();
-        }
-
-        public override void Render()
-        {
-            Console.WriteLine("아무 키나 눌러주세요.");
-            Console.ReadKey();
-            Console.Clear();
             _titles = new List<string>();
             _titles.Add("기능 선택");
             _titles.Add("1. Get AD 사용자 정보");
@@ -63,6 +46,13 @@ namespace ADController._01.CSyncModel
             _titles.Add("8. ");
             _titles.Add("9. ");
             _titles.Add("99.EXIT");
+        }
+
+        public override void Render()
+        {
+            Console.WriteLine("아무 키나 눌러주세요.");
+            Console.ReadKey();
+            Console.Clear();
             _titles.ForEach(x => { Console.WriteLine(x); });
         }
 

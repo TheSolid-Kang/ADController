@@ -5,20 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ADController._01.CSyncModel
+namespace ADController._01.CSyncModule
 {
-    internal interface ISyncModel : IDisposable
+    internal interface ISyncModule : IDisposable
     {
         protected void Initialize();
-        protected void InitFunc();
-        protected void InitPracticeFunc();
         protected void Render();
         protected int Update(int _event = 0);
     }
 
-    internal class CSyncModel : ISyncModel
+    internal class CSyncModule : ISyncModule
     {
-        public CSyncModel() { }
+        public CSyncModule() { }
 
 
         #region 멤버변수
@@ -30,17 +28,8 @@ namespace ADController._01.CSyncModel
         {
             //throw new NotImplementedException();
         }
-        public virtual void InitFunc()
-        {
-            //throw new NotImplementedException();
-        }
 
         public virtual void Initialize()
-        {
-            //throw new NotImplementedException();
-        }
-
-        public virtual void InitPracticeFunc()
         {
             //throw new NotImplementedException();
         }
@@ -56,6 +45,7 @@ namespace ADController._01.CSyncModel
             return 0;
         }
         #endregion
+
         #region 내장 멤버함수
         public int Excute(int _num = 0)
         {

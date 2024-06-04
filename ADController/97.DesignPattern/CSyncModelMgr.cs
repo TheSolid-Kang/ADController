@@ -1,4 +1,4 @@
-﻿using ADController._01.CSyncModel;
+﻿using ADController._01.CSyncModule;
 using Engine._98.Headers;
 using ADController._02.CObj;
 using System;
@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace ADController._97.DesignPattern
 {
-    internal class CSyncModelMgr : GENERIC_MGR<CSyncModelMgr>
+    internal class CSyncModuleMgr : GENERIC_MGR<CSyncModuleMgr>
     {
-        private CSyncModel _SyncModel = new CTestSyncModel();
+        private CSyncModule _SyncModule = new CTestSyncModule();
 
         public enum SYNC_MODEL
         {
@@ -20,28 +20,28 @@ namespace ADController._97.DesignPattern
                 , END
         }
 
-        public void SetSyncModel(int _SyncModelNum)
+        private void SetSyncModule(int _SyncModuleNum)
         {
-            if (_SyncModel != null)
-                _SyncModel.Dispose();
-            SYNC_MODEL sYNC_MODEL = (SYNC_MODEL)_SyncModelNum;
+            if (_SyncModule != null)
+                _SyncModule.Dispose();
+            SYNC_MODEL sYNC_MODEL = (SYNC_MODEL)_SyncModuleNum;
 
             switch (sYNC_MODEL)
             {
                 case SYNC_MODEL.TEST:
-                    _SyncModel = new CTestSyncModel();
+                    _SyncModule = new CTestSyncModule();
                     break;
                 case SYNC_MODEL.AD_USER:
-                    _SyncModel = new CADUserSyncModel();
+                    _SyncModule = new CADUserSyncModule();
                     break;
             }
         }
-        private CSyncModel SyncModel => _SyncModel;
+        private CSyncModule SyncModule => _SyncModule;
         public int Excute(int _num = 0)
         {
-            SetSyncModel(_num);
+            SetSyncModule(_num);
 
-            SyncModel.Excute(_num);
+            SyncModule.Excute(_num);
             return 0;
         }
     }

@@ -43,9 +43,7 @@ namespace ADController._99._Default
                         if (false == dataRow.Table.Columns.Contains(prop.Name))
                             continue;
                         if (!object.Equals(dataRow[prop.Name], System.DBNull.Value))
-                        {
                             prop.SetValue(obj, dataRow[prop.Name], null);
-                        }
                     }
                     list.Add(obj);
                 }
