@@ -60,7 +60,7 @@ namespace ADController._01.CScene
             _titles.Add("기능 선택");
             _titles.Add("1. Get AD 사용자 정보");
             _titles.Add("2. AD정보 ERP에 INSERT, UPDATE, DELETE");
-            _titles.Add("3. ");
+            _titles.Add("3. AD Group 정보 SELECT ");
             _titles.Add("4. Get IDCenter 사용자 정보");
             _titles.Add("5. Insert yw_TADUsers_IF ");
             _titles.Add("6. ");
@@ -251,6 +251,16 @@ namespace ADController._01.CScene
         /// <returns></returns>
         protected int Print3()
         {
+            //1. AD 사용자 컨테이너, ERP 사용자 컨테이너 생성
+            //  가. Config 파일에서 LDAP 등록 정보 가져오기
+            string path = AppConfig.LDAP_URL;
+            string username = AppConfig.LDAP_ID;
+            string password = AppConfig.LDAP_PWD;
+
+
+            //  나. 현재 AD 사용자 목록 컨테이너 생성 
+            List<ADGroup> adGroups = CActiveDirectoryMgr.GetInstance().GetADGroups(path, username, password);
+            List<yw_TADUsers_IF> adYw_TADGroups_IFs = new(adGroups.Count);
             return 1;
         }
         protected int Print4()
