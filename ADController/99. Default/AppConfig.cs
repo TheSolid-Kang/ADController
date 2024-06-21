@@ -17,6 +17,6 @@ namespace ADController._99._Default
         private static string _LDAP_URL = ConfigurationManager.AppSettings["LDAP_URL"].ToString();
         private static string _LDAP_ID = ConfigurationManager.AppSettings["LDAP_ID"].ToString();
         private static string _LDAP_PWD = ConfigurationManager.AppSettings["LDAP_PWD"].ToString();
-        private static string _DB_URL = ConfigurationManager.ConnectionStrings["YWDEV"].ConnectionString;
+        private static string _DB_URL = ConfigurationManager.ConnectionStrings["DB"].ConnectionString;
     }
 }
